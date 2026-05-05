@@ -1,0 +1,13 @@
+/* AI Role: グローバルスタイル定義 */
+/* 役割: Tailwind CSSのディレクティブの読み込み */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* なぜ: 背景色をアプリ全体に適用し、スクロールバー等のデフォルトスタイルを調整するため */
+body {
+  margin: 0;
+  background-color: #111111; 
+  color: #ece8e1; 
+}

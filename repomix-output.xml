@@ -1,0 +1,1799 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+index.html
+package.json
+postcss.config.js
+src/App.tsx
+src/components/RoleIcon.tsx
+src/components/WeightController.tsx
+src/constants/valorant.ts
+src/index.css
+src/locales/en.json
+src/locales/ja.json
+src/logic/balancer.ts
+src/logic/randomizer.ts
+src/logic/validator.ts
+src/main.tsx
+src/types.ts
+src/types/index.ts
+tailwind.config.js
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".gitignore">
+# 依存関係
+node_modules/
+.pnp
+.pnp.js
+
+# ビルド成果物
+dist/
+dist-ssr/
+*.local
+
+# ログ
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 環境変数 (セキュリティ上、絶対にGitHubに上げない)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# エディタ設定
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS固有ファイル
+.DS_Store
+Thumbs.db
+
+public/images/
+</file>
+
+<file path="index.html">
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Valorant Custom Randomizer</title>
+  </head>
+  <body>
+    <!-- なぜ: ここにReactのコンポーネントツリーが展開されます -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="package.json">
+{
+  "name": "valorant-party",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.18",
+    "happy-dom": "^20.9.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.2.2",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
+  }
+}
+</file>
+
+<file path="postcss.config.js">
+// AI Role: CSSビルドツールの設定
+// 役割: Vite (PostCSS) にTailwind CSSの処理を委譲する
+
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+</file>
+
+<file path="src/App.tsx">
+// src/App.tsx
+// AI Role: メインUIの提供
+// 役割: App.tsxの肥大化を防ぐため、RoleIconとWeightControllerを別ファイルへ分割
+
+import React, { useState, useRef } from 'react';
+import { generateMatch, getRankWeight } from './logic/randomizer';
+import { Player, PlayerResult, RandomizerConfig, AdvancedConfig, Rank, Tier, Role, Team, MatchResult } from './types';
+import { RANKS, ROLES, MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS, AGENT_ROLES } from './constants/valorant';
+import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RoleIcon } from './components/RoleIcon';
+import { WeightController } from './components/WeightController';
+
+import jaTranslation from './locales/ja.json';
+import enTranslation from './locales/en.json';
+
+const TRANSLATIONS = {
+  ja: jaTranslation,
+  en: enTranslation
+};
+
+const INITIAL_PLAYERS: Player[] = Array.from({ length: 10 }, (_, i) => ({
+  id: `p${i + 1}`,
+  name: `Player ${i + 1}`,
+  rank: 'None',
+  tier: 2,
+  fixedTeam: i < 5 ? 'Team 1' : 'Team 2',
+  preferredRoles: [],
+}));
+
+const getImagePath = (category: 'agents' | 'weapons' | 'maps', name: string) => {
+  const safeName = name.replace('/', '');
+  return `/images/${category}/${safeName}.png`;
+};
+
+const getRankImagePath = (rank: Rank, tier: Tier) => {
+  if (rank === 'None') return '';
+  if (rank === 'Radiant') return '/images/ranks/Radiant_Rank.png';
+  return `/images/ranks/${rank}_${tier}_Rank.png`;
+};
+
+const AdvancedItemCard: React.FC<{
+  item: string;
+  category: 'maps' | 'weapons' | 'agents';
+  isBanned: boolean;
+  currentWeight: number;
+  onToggleBan: () => void;
+  onUpdateWeight: (weight: number) => void;
+  t: Record<string, string>;
+}> = ({ item, category, isBanned, currentWeight, onToggleBan, onUpdateWeight, t }) => {
+  const [imgError, setImgError] = useState(false);
+  const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
+  const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
+  
+  return (
+    <div className={`flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 rounded border transition-colors ${isBanned ? 'bg-red-900/20 border-val-red/50 opacity-60 hover:opacity-100' : 'bg-val-dark border-val-gray/20 hover:border-val-gray/50'}`}>
+      <div className={`w-full ${aspectClass} ${bgClass} rounded-sm overflow-hidden relative flex items-center justify-center group cursor-pointer`} onClick={onToggleBan}>
+        {!imgError ? (
+          <img 
+            src={getImagePath(category, item)} 
+            alt={item} 
+            className={`w-full h-full transition-transform duration-300 group-hover:scale-110 ${category === 'weapons' ? 'object-contain p-1' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100'}`} 
+            onError={() => setImgError(true)} 
+          />
+        ) : (
+          <span className={`text-val-gray text-[10px] md:text-xs font-bold uppercase break-all px-1 text-center ${isBanned ? 'opacity-40' : ''}`}>{item}</span>
+        )}
+        
+        {isBanned && (
+          <div className="absolute inset-0 flex items-center justify-center bg-red-900/20">
+            <Ban className="w-8 h-8 text-val-red drop-shadow-md" />
+          </div>
+        )}
+
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-1 pt-4 pointer-events-none">
+          <div className={`font-bold text-[9px] md:text-[10px] lg:text-xs truncate text-center drop-shadow-md ${isBanned ? 'text-val-gray' : 'text-white'}`} title={item}>{item}</div>
+        </div>
+      </div>
+      
+      <button 
+        onClick={onToggleBan}
+        className={`text-[9px] md:text-[10px] px-1 py-1 rounded font-bold flex items-center justify-center gap-1 transition-colors ${isBanned ? 'bg-val-red text-white' : 'bg-val-gray/30 hover:bg-val-gray/50 text-val-light'}`}
+      >
+        <Ban className="w-2.5 h-2.5 md:w-3 md:h-3" /> {isBanned ? 'BANNED' : t.ban}
+      </button>
+      <div className="flex items-center justify-between gap-1 mt-auto px-1">
+        <span className="text-[8px] md:text-[9px] text-val-gray shrink-0">{t.weight}:</span>
+        <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} />
+      </div>
+    </div>
+  );
+};
+
+const QuickBanCarousel: React.FC<{
+  title: string;
+  items: string[];
+  category: 'maps' | 'weapons' | 'agents';
+  bannedList: string[];
+  weights: Record<string, number>;
+  onToggle: (item: string) => void;
+  onUpdateWeight: (item: string, weight: number) => void;
+  t: Record<string, string>;
+}> = ({ title, items, category, bannedList, weights, onToggle, onUpdateWeight, t }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollAmount = clientWidth * 0.8;
+      scrollRef.current.scrollTo({
+        left: direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
+  const widthClass = category === 'agents' ? 'w-20 md:w-28' : 'w-28 md:w-44';
+  const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
+
+  const activeWeight = items.reduce((sum, item) => bannedList.includes(item) ? sum : sum + (weights[item] ?? 10), 0);
+  
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex justify-between items-end px-1">
+        <span className="text-xs md:text-sm font-bold text-val-gray">{title}</span>
+        <span className="text-[10px] md:text-xs text-val-red font-bold bg-val-red/10 px-1.5 py-0.5 rounded border border-val-red/20">
+          {t.totalWeight.replace('{weight}', String(activeWeight))}
+        </span>
+      </div>
+      <div className="relative group flex items-center">
+        <button 
+          onClick={() => scroll('left')} 
+          className="absolute left-0 z-20 bg-black/80 hover:bg-val-red p-1 md:p-2 rounded-r opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+        >
+          <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
+        </button>
+
+        <div ref={scrollRef} className="flex overflow-x-auto gap-3 pb-4 pt-1 snap-x scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] w-full px-1">
+          {items.map(item => {
+            const isBanned = bannedList.includes(item);
+            const currentWeight = weights[item] ?? 10;
+            const [imgError, setImgError] = useState(false);
+            
+            return (
+              <div key={item} className={`shrink-0 snap-start flex flex-col gap-2 ${widthClass} relative`}>
+                <button
+                  onClick={() => onToggle(item)}
+                  className={`relative w-full rounded overflow-hidden border-2 transition-all ${isBanned ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 hover:border-val-gray/60'} ${aspectClass} ${bgClass}`}
+                  title={`${item} (${isBanned ? 'Banned' : 'Active'})`}
+                >
+                  {!imgError ? (
+                    <img
+                      src={getImagePath(category, item)}
+                      alt={item}
+                      className={`w-full h-full transition-transform ${category === 'weapons' ? 'object-contain p-1' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100'}`}
+                      onError={() => setImgError(true)}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full text-center p-1">
+                      <span className={`text-[8px] md:text-[10px] font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
+                    </div>
+                  )}
+                  
+                  {isBanned && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-900/30">
+                      <Ban className="w-6 h-6 md:w-8 md:h-8 text-val-red drop-shadow-md" />
+                    </div>
+                  )}
+                  
+                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center">
+                    <div className={`font-bold text-[9px] md:text-[11px] truncate drop-shadow-md ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
+                      {item}
+                    </div>
+                  </div>
+                </button>
+
+                <div className="flex items-center justify-center px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative">
+                  <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <button 
+          onClick={() => scroll('right')} 
+          className="absolute right-0 z-20 bg-black/80 hover:bg-val-red p-1 md:p-2 rounded-l opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+        >
+          <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ player, isDefender }) => {
+  const [agentImgError, setAgentImgError] = useState(false);
+  const borderColor = isDefender ? 'border-blue-500/50' : 'border-val-red/50';
+  const hoverColor = isDefender ? 'hover:border-blue-400' : 'hover:border-red-400';
+  const weaponCount = (player.mainWeapon ? 1 : 0) + (player.subWeapon ? 1 : 0);
+
+  return (
+    <div className={`bg-black/60 border ${borderColor} ${hoverColor} transition-colors flex flex-col h-full overflow-hidden relative group`}>
+      <div className="p-1 md:p-1.5 flex justify-between items-center bg-val-dark z-10 border-b border-val-gray/20">
+        <div className="font-bold text-xs md:text-sm truncate pr-1 text-white">{player.name}</div>
+        {player.rank !== 'None' && (
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] md:text-[10px] font-bold bg-val-gray/20 px-1 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
+              {player.rank === 'Radiant' ? player.rank : `${player.rank} ${player.tier}`}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {weaponCount > 0 && (
+        <div className={`p-1 z-10 bg-val-dark/90 border-b border-val-gray/20 grid gap-1 ${weaponCount === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {player.mainWeapon && (
+            <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
+              <img src={getImagePath('weapons', player.mainWeapon)} alt={player.mainWeapon} className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[9px] px-1 text-val-light font-bold truncate max-w-full">{player.mainWeapon}</span>
+            </div>
+          )}
+          {player.subWeapon && (
+            <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
+              <img src={getImagePath('weapons', player.subWeapon)} alt={player.subWeapon} className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[7px] md:text-[8px] px-1 text-val-light font-bold truncate max-w-full">{player.subWeapon}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex-1 w-full relative mt-auto bg-black/20 overflow-hidden flex items-end justify-center aspect-[2/3]">
+        {player.rank !== 'None' && (
+          <div className="absolute top-1 left-1 md:top-2 md:left-2 z-20 pointer-events-none">
+            <img 
+              src={getRankImagePath(player.rank, player.tier)} 
+              alt={player.rank} 
+              className="w-8 h-8 md:w-12 md:h-12 object-contain drop-shadow-lg"
+              onError={(e) => e.currentTarget.style.display = 'none'}
+            />
+          </div>
+        )}
+        
+        {player.agent ? (
+          <>
+            {!agentImgError ? (
+              <img
+                src={getImagePath('agents', player.agent)}
+                alt={player.agent}
+                className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                onError={() => setAgentImgError(true)}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-yellow-400 font-bold text-xs md:text-sm uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{player.agent}</span>
+              </div>
+            )}
+            {player.role && (
+              <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-val-dark/80 p-1 md:p-1.5 rounded-full border border-val-gray/30">
+                <RoleIcon role={player.role} className="w-3 h-3 md:w-4 md:h-4 text-white opacity-90 drop-shadow-md" />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 md:gap-4 bg-val-dark/50">
+            {player.role && (
+              <>
+                <RoleIcon role={player.role} className="w-10 h-10 md:w-16 md:h-16 text-val-light opacity-80 drop-shadow-lg" />
+                <span className="text-val-light font-bold text-xs md:text-sm uppercase tracking-widest">{player.role}</span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const INITIAL_COMBINATIONS = MAIN_WEAPONS.reduce((acc, mw) => {
+  acc[mw] = [...SUB_WEAPONS];
+  return acc;
+}, {} as Record<string, string[]>);
+
+type ScreenState = 'setup' | 'advanced' | 'result';
+type Language = 'ja' | 'en';
+
+const App: React.FC = () => {
+  const [screen, setScreen] = useState<ScreenState>('setup');
+  const [lang, setLang] = useState<Language>('ja');
+  const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
+  
+  const [config, setConfig] = useState<RandomizerConfig>({
+    autoTeams: true,
+    useRanks: true,
+    restrictWeapons: true,
+    restrictWeaponCombinations: false,
+    restrictAgents: false,
+    restrictRoles: false,
+  });
+
+  const [advanced, setAdvanced] = useState<AdvancedConfig>({
+    bannedMaps: [],
+    bannedWeapons: [],
+    bannedAgents: [],
+    mapWeights: {},
+    weaponWeights: {},
+    agentWeights: {},
+    weaponCombinations: INITIAL_COMBINATIONS,
+    maxRankWeightDifference: 10
+  });
+
+  const [selectedComboMain, setSelectedComboMain] = useState<string>(MAIN_WEAPONS[0]);
+  const [agentFilter, setAgentFilter] = useState<Role | 'All'>('All');
+
+  const [result, setResult] = useState<MatchResult | null>(null);
+
+  const t = TRANSLATIONS[lang] as Record<string, string>;
+
+  const handleGenerate = () => {
+    const activePlayers = players.filter(p => p.name.trim() !== '');
+    if (activePlayers.length === 0) return;
+    
+    setResult(generateMatch(activePlayers, config, advanced));
+    setScreen('result');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const toggleConfig = (key: keyof RandomizerConfig) => {
+    setConfig(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const updatePlayerName = (index: number, name: string) => {
+    const newPlayers = [...players];
+    newPlayers[index].name = name;
+    setPlayers(newPlayers);
+  };
+
+  const updatePlayerRank = (index: number, rank: Rank) => {
+    const newPlayers = [...players];
+    newPlayers[index].rank = rank;
+    setPlayers(newPlayers);
+  };
+
+  const updatePlayerTier = (index: number, tier: Tier) => {
+    const newPlayers = [...players];
+    newPlayers[index].tier = tier;
+    setPlayers(newPlayers);
+  };
+
+  const togglePlayerRole = (index: number, role: Role) => {
+    const newPlayers = [...players];
+    const roles = newPlayers[index].preferredRoles;
+    if (roles.includes(role)) {
+      newPlayers[index].preferredRoles = roles.filter(r => r !== role);
+    } else {
+      newPlayers[index].preferredRoles = [...roles, role];
+    }
+    setPlayers(newPlayers);
+  };
+
+  const updatePlayerTeam = (index: number, team: Team) => {
+    const newPlayers = [...players];
+    newPlayers[index].fixedTeam = team;
+    setPlayers(newPlayers);
+  };
+
+  const toggleBan = (listKey: 'bannedMaps' | 'bannedWeapons' | 'bannedAgents', item: string) => {
+    setAdvanced(prev => ({
+      ...prev,
+      [listKey]: prev[listKey].includes(item) 
+        ? prev[listKey].filter(i => i !== item)
+        : [...prev[listKey], item]
+    }));
+  };
+
+  const updateWeight = (dictKey: 'mapWeights' | 'weaponWeights' | 'agentWeights', item: string, weight: number) => {
+    setAdvanced(prev => ({
+      ...prev,
+      [dictKey]: { ...prev[dictKey], [item]: weight }
+    }));
+  };
+
+  const renderPlayerRow = (player: Player, index: number) => (
+    <div key={player.id} className="bg-black/40 p-2 border border-val-gray/20 focus-within:border-val-red transition-colors flex items-center gap-2 md:gap-3">
+      <span className="text-val-gray font-bold w-4 md:w-5 text-sm md:text-base text-right shrink-0">
+        {index + 1}.
+      </span>
+
+      {!config.autoTeams && (
+        <button
+          onClick={() => updatePlayerTeam(index, player.fixedTeam === 'Team 1' ? 'Team 2' : 'Team 1')}
+          className={`p-1 text-[10px] md:text-xs font-bold w-7 md:w-8 rounded shrink-0 transition-colors ${player.fixedTeam === 'Team 1' ? 'bg-blue-500 text-white' : 'bg-red-500 text-white'}`}
+          title="Click to change team"
+        >
+          {player.fixedTeam === 'Team 1' ? 'T1' : 'T2'}
+        </button>
+      )}
+
+      <input
+        type="text"
+        value={player.name}
+        onChange={(e) => updatePlayerName(index, e.target.value)}
+        className="bg-transparent border-b border-val-gray/50 focus:border-val-red outline-none px-2 py-0.5 flex-1 text-sm md:text-base min-w-[60px]"
+        placeholder={t.playerName}
+      />
+      
+      <div className="flex gap-1 shrink-0 items-center">
+        {player.rank !== 'None' ? (
+          <img 
+            src={getRankImagePath(player.rank, player.tier)} 
+            alt={player.rank} 
+            className="w-6 h-6 md:w-8 md:h-8 object-contain"
+            onError={(e) => e.currentTarget.style.display = 'none'}
+          />
+        ) : (
+          <div className="w-6 h-6 md:w-8 md:h-8" />
+        )}
+        <select
+          value={player.rank}
+          onChange={(e) => updatePlayerRank(index, e.target.value as Rank)}
+          className="bg-val-dark border border-val-gray/50 text-val-light text-xs md:text-sm p-1 md:p-1.5 w-[85px] outline-none focus:border-val-red cursor-pointer"
+        >
+          {RANKS.map(rank => (
+            <option key={rank} value={rank}>
+              {rank === 'None' ? t.unranked : rank}
+            </option>
+          ))}
+        </select>
+        {player.rank !== 'None' && player.rank !== 'Radiant' && (
+          <select
+            value={player.tier}
+            onChange={(e) => updatePlayerTier(index, Number(e.target.value) as Tier)}
+            className="bg-val-dark border border-val-gray/50 text-val-light text-xs md:text-sm p-1 md:p-1.5 w-[40px] outline-none focus:border-val-red cursor-pointer"
+          >
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+          </select>
+        )}
+      </div>
+
+      <div className="flex gap-1 items-center bg-black/30 p-1 rounded border border-val-gray/30 shrink-0">
+        {ROLES.map(role => {
+          const isSelected = player.preferredRoles.includes(role);
+          return (
+            <button
+              key={role}
+              onClick={() => togglePlayerRole(index, role)}
+              className={`p-1 rounded transition-colors ${isSelected ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]' : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'}`}
+              title={role}
+            >
+              <RoleIcon role={role} className="w-3 h-3 md:w-4 md:h-4 drop-shadow-md" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderAdvancedSection = (title: string, items: string[], banKey: 'bannedMaps' | 'bannedWeapons' | 'bannedAgents', weightKey: 'mapWeights' | 'weaponWeights' | 'agentWeights', category: 'maps' | 'weapons' | 'agents') => {
+    const displayedItems = category === 'agents' && agentFilter !== 'All' 
+      ? items.filter(item => AGENT_ROLES[item] === agentFilter)
+      : items;
+
+    const activeWeight = items.reduce((sum, item) => advanced[banKey].includes(item) ? sum : sum + (advanced[weightKey][item] ?? 10), 0);
+
+    return (
+      <details className="bg-black/30 p-4 border-l-4 border-val-gray group mb-4 shadow-xl">
+        <summary className="font-bold text-lg cursor-pointer flex justify-between items-center outline-none">
+          <div className="flex items-center gap-3">
+            {title}
+            <span className="text-xs md:text-sm bg-black/40 text-val-light px-2 py-0.5 rounded border border-val-gray/30 font-normal tracking-wider">
+              {t.totalWeight.replace('{weight}', String(activeWeight))}
+            </span>
+          </div>
+          <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
+        </summary>
+
+        {category === 'agents' && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={() => setAgentFilter('All')}
+              className={`px-3 py-1.5 border rounded text-xs md:text-sm font-bold transition-colors ${agentFilter === 'All' ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
+            >
+              ALL
+            </button>
+            {ROLES.map(role => (
+              <button
+                key={role}
+                onClick={() => setAgentFilter(role)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 border rounded text-xs md:text-sm font-bold transition-colors ${agentFilter === role ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
+              >
+                <RoleIcon role={role} className="w-3 h-3 md:w-4 md:h-4" /> {role}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 mt-4 overflow-visible pb-12">
+          {displayedItems.map(item => (
+            <AdvancedItemCard 
+              key={item}
+              item={item}
+              category={category}
+              isBanned={advanced[banKey].includes(item)}
+              currentWeight={advanced[weightKey][item] ?? 10}
+              onToggleBan={() => toggleBan(banKey, item)}
+              onUpdateWeight={(w) => updateWeight(weightKey, item, w)}
+              t={t}
+            />
+          ))}
+        </div>
+      </details>
+    );
+  };
+
+  const allPlayers = result ? [...result.team1, ...result.team2] : [];
+  const defenders = allPlayers.filter(p => p.assignedSide === 'Defender');
+  const attackers = allPlayers.filter(p => p.assignedSide === 'Attacker');
+
+  const defenderTeamName = result?.team1Side === 'Defender' ? t.team1 : t.team2;
+  const attackerTeamName = result?.team1Side === 'Attacker' ? t.team1 : t.team2;
+
+  const defenderWeight = defenders.reduce((sum, p) => sum + getRankWeight(p.rank, p.tier), 0);
+  const attackerWeight = attackers.reduce((sum, p) => sum + getRankWeight(p.rank, p.tier), 0);
+
+  return (
+    <div className="min-h-screen bg-val-dark text-val-light font-sans selection:bg-val-red selection:text-white flex flex-col">
+      <header className="border-b border-val-gray/30 p-2 md:p-3 flex justify-between items-center bg-val-dark sticky top-0 z-30 shadow-md shrink-0">
+        <div className="flex items-center gap-2">
+          {screen !== 'setup' && (
+            <button 
+              onClick={() => setScreen('setup')}
+              className="text-val-gray hover:text-white transition-colors p-1"
+              title="Back"
+            >
+              <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+          )}
+          <h1 className="text-lg md:text-2xl font-bold tracking-tighter uppercase italic flex items-center gap-1.5 md:gap-2">
+            <Swords className="text-val-red w-4 h-4 md:w-6 md:h-6" />
+            {t.title.split(' ')[0]} <span className="text-val-red">{t.title.split(' ')[1]}</span>
+          </h1>
+        </div>
+        
+        <div className="flex items-center gap-3 md:gap-6">
+          <div className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded border border-val-gray/20">
+            <Globe className="w-4 h-4 text-val-gray" />
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as Language)}
+              className="bg-transparent text-val-light text-xs md:text-sm outline-none cursor-pointer uppercase font-bold"
+            >
+              <option value="ja">JP</option>
+              <option value="en">EN</option>
+            </select>
+          </div>
+
+          {screen === 'setup' && (
+            <button 
+              onClick={handleGenerate}
+              className="bg-val-red hover:bg-red-600 text-white px-4 py-1.5 md:px-6 md:py-2 font-bold uppercase tracking-wider transition-colors animate-pulse text-xs md:text-sm shrink-0"
+            >
+              {t.generate}
+            </button>
+          )}
+          {screen === 'result' && (
+            <button 
+              onClick={handleGenerate}
+              className="bg-val-gray/20 hover:bg-val-gray/40 text-white px-3 py-1.5 md:px-4 md:py-2 font-bold uppercase tracking-wider transition-colors border border-val-gray/50 flex items-center gap-2 text-xs md:text-sm shrink-0"
+            >
+              <RefreshCw className="w-3 h-3 md:w-4 md:h-4" /> {t.reroll}
+            </button>
+          )}
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-[100rem] w-full mx-auto p-2 md:p-4 flex flex-col min-h-0">
+        
+        {screen === 'setup' && (
+          <div className="space-y-4 md:space-y-6 animate-slide-up overflow-y-auto pb-10">
+            <section className="bg-val-blue border-l-4 border-val-red p-4 md:p-5">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg md:text-xl font-bold uppercase italic flex items-center gap-2">
+                  <Settings2 className="text-val-red w-5 h-5" /> {t.rules}
+                </h2>
+                <button 
+                  onClick={() => setScreen('advanced')}
+                  className="bg-val-gray/20 hover:bg-val-gray/40 text-val-light px-3 py-1.5 rounded text-xs md:text-sm flex items-center gap-2 transition-colors border border-val-gray/30"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-val-red" /> {t.advancedSettings}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-3 md:gap-4">
+                {Object.entries({
+                  autoTeams: t.autoTeams,
+                  useRanks: t.useRanks,
+                  restrictWeapons: t.restrictWeapons,
+                  restrictWeaponCombinations: t.restrictWeaponCombinations,
+                  restrictAgents: t.restrictAgents,
+                  restrictRoles: t.restrictRoles
+                }).map(([key, label]) => {
+                  const isDisabled = (key === 'useRanks' && !config.autoTeams) || (key === 'restrictWeaponCombinations' && !config.restrictWeapons);
+                  return (
+                    <label key={key} className={`flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/50'}`}>
+                      <div className="relative pointer-events-none">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only" 
+                          checked={config[key as keyof RandomizerConfig]}
+                          onChange={() => !isDisabled && toggleConfig(key as keyof RandomizerConfig)}
+                          disabled={isDisabled}
+                        />
+                        <div className={`w-8 h-4 rounded-full transition-colors ${config[key as keyof RandomizerConfig] && !isDisabled ? 'bg-val-red' : 'bg-val-gray'}`}></div>
+                        <div className={`absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform ${config[key as keyof RandomizerConfig] && !isDisabled ? 'translate-x-4' : ''}`}></div>
+                      </div>
+                      <span className="uppercase text-xs md:text-sm tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label as string}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="bg-val-blue border-l-4 border-val-gray p-4 md:p-5">
+              <h2 className="text-lg md:text-xl font-bold mb-3 uppercase italic flex items-center gap-2">
+                <Users className="text-val-gray w-5 h-5" /> {t.players}
+              </h2>
+
+              {!config.autoTeams ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold mb-3 text-blue-400 border-b border-blue-500/30 pb-1 flex justify-between items-end">
+                      {t.team1}
+                      <span className="text-xs font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 1').length} {t.playerCount}</span>
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {players.map((p, i) => p.fixedTeam === 'Team 1' && renderPlayerRow(p, i))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold mb-3 text-val-red border-b border-val-red/30 pb-1 flex justify-between items-end">
+                      {t.team2}
+                      <span className="text-xs font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 2').length} {t.playerCount}</span>
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {players.map((p, i) => p.fixedTeam === 'Team 2' && renderPlayerRow(p, i))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-2">
+                  {players.map((p, i) => renderPlayerRow(p, i))}
+                </div>
+              )}
+            </section>
+
+            <section className="bg-val-dark p-4 border border-val-gray/20 rounded shadow-md overflow-visible">
+              <h2 className="text-sm md:text-base font-bold mb-3 uppercase italic text-val-gray flex items-center gap-2">
+                <Ban className="w-4 h-4" /> Quick Bans & Weights
+              </h2>
+              <div className="space-y-4">
+                <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
+              </div>
+            </section>
+          </div>
+        )}
+
+        {screen === 'advanced' && (
+          <div className="animate-slide-up overflow-y-auto pb-10">
+            <h2 className="text-xl md:text-2xl font-bold mb-6 uppercase italic flex items-center gap-2 text-val-red">
+              <SlidersHorizontal className="w-6 h-6" /> {t.advancedSettings}
+            </h2>
+
+            <div className="bg-black/30 p-4 border-l-4 border-val-gray group mb-4 shadow-xl flex items-center justify-between">
+              <span className="font-bold text-sm md:text-lg">{t.maxRankDifference}</span>
+              <div className="flex items-center bg-black/40 px-2 py-1 rounded border border-val-gray/30 focus-within:border-val-red">
+                <input
+                  type="number"
+                  min="0"
+                  value={advanced.maxRankWeightDifference}
+                  onChange={(e) => setAdvanced(prev => ({ ...prev, maxRankWeightDifference: Number(e.target.value) }))}
+                  className="bg-transparent text-val-light text-sm w-12 text-center outline-none appearance-none [-moz-appearance:textfield]"
+                />
+              </div>
+            </div>
+
+            {renderAdvancedSection(t.mapSettings, MAPS, 'bannedMaps', 'mapWeights', 'maps')}
+            {renderAdvancedSection(t.agentSettings, AGENTS, 'bannedAgents', 'agentWeights', 'agents')}
+            {renderAdvancedSection(t.weaponSettings, [...MAIN_WEAPONS, ...SUB_WEAPONS], 'bannedWeapons', 'weaponWeights', 'weapons')}
+            
+            <details className="bg-black/30 p-4 border-l-4 border-val-gray group mb-4 shadow-xl">
+              <summary className="font-bold text-lg cursor-pointer flex justify-between items-center outline-none">
+                {t.weaponCombinations}
+                <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div className="mt-4 flex flex-col gap-6">
+                <div>
+                  <div className="text-sm font-bold text-val-gray mb-3">{t.selectMainWeapon}</div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 md:gap-3">
+                    {MAIN_WEAPONS.map(mw => {
+                      const isSelected = selectedComboMain === mw;
+                      const isBanned = advanced.bannedWeapons.includes(mw);
+                      return (
+                        <button
+                          key={mw}
+                          onClick={() => {
+                            if (isBanned) {
+                              if (window.confirm(t.unbanConfirm.replace('{weapon}', mw))) {
+                                setAdvanced(prev => ({
+                                  ...prev,
+                                  bannedWeapons: prev.bannedWeapons.filter(w => w !== mw)
+                                }));
+                                setSelectedComboMain(mw);
+                              }
+                            } else {
+                              setSelectedComboMain(mw);
+                            }
+                          }}
+                          className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isSelected && !isBanned ? 'border-val-red bg-val-red/10 shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/30 bg-val-dark hover:border-val-gray/60'} ${isBanned ? 'opacity-80' : ''}`}
+                          title={`Select ${mw}`}
+                        >
+                          <img 
+                            src={getImagePath('weapons', mw)} 
+                            alt={mw} 
+                            className={`w-full h-full object-contain p-1 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
+                            onError={(e) => e.currentTarget.style.display = 'none'}
+                          />
+                          {isBanned && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
+                              <Ban className="w-4 h-4 md:w-5 md:h-5 text-val-red drop-shadow-md mb-0.5" />
+                              <span className="text-[7px] md:text-[8px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-0.5 pt-3 pointer-events-none text-center z-20">
+                            <div className={`font-bold text-[8px] md:text-[10px] truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
+                              {mw}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-val-gray mb-3">{t.allowedSubWeapons}</div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    {SUB_WEAPONS.map(sw => {
+                      const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
+                      const isBanned = advanced.bannedWeapons.includes(sw);
+                      return (
+                        <button
+                          key={sw}
+                          onClick={() => {
+                            if (isBanned) {
+                              if (window.confirm(t.unbanConfirm.replace('{weapon}', sw))) {
+                                setAdvanced(prev => {
+                                  const newBannedWeapons = prev.bannedWeapons.filter(w => w !== sw);
+                                  const current = prev.weaponCombinations[selectedComboMain] || [];
+                                  const updated = current.includes(sw) ? current : [...current, sw];
+                                  return { ...prev, bannedWeapons: newBannedWeapons, weaponCombinations: { ...prev.weaponCombinations, [selectedComboMain]: updated } };
+                                });
+                              }
+                            } else {
+                              setAdvanced(prev => {
+                                const current = prev.weaponCombinations[selectedComboMain] || [];
+                                const updated = current.includes(sw) ? current.filter(w => w !== sw) : [...current, sw];
+                                return { ...prev, weaponCombinations: { ...prev.weaponCombinations, [selectedComboMain]: updated } };
+                              });
+                            }
+                          }}
+                          className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isAllowed && !isBanned ? 'border-val-red bg-val-dark shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 bg-black/80'}`}
+                        >
+                          <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-1 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
+                          
+                          {isBanned ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
+                              <Ban className="w-4 h-4 md:w-5 md:h-5 text-val-red drop-shadow-md mb-0.5" />
+                              <span className="text-[7px] md:text-[8px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                            </div>
+                          ) : !isAllowed && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-red-900/30 z-10">
+                              <Ban className="w-5 h-5 md:w-6 md:h-6 text-val-red drop-shadow-md" />
+                            </div>
+                          )}
+
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-0.5 pt-3 pointer-events-none text-center z-20">
+                            <div className={`font-bold text-[8px] md:text-[9px] truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
+                                {sw}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+        )}
+
+        {screen === 'result' && result && (
+          <div className="flex flex-col gap-2 md:gap-3 animate-slide-up flex-1 relative min-h-0">
+            {result.map && (
+              <div className="relative w-full h-20 md:h-32 shrink-0 rounded overflow-hidden border border-val-gray/30 shadow-lg bg-val-dark">
+                <img 
+                  src={getImagePath('maps', result.map)} 
+                  alt={result.map} 
+                  className="absolute inset-0 w-full h-full object-cover object-center opacity-60"
+                  onError={(e) => e.currentTarget.style.display = 'none'}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-val-dark via-val-dark/70 to-transparent pointer-events-none"></div>
+                <div className="absolute inset-y-0 left-0 flex flex-col justify-center p-3 md:p-6 pointer-events-none">
+                  <span className="text-[9px] md:text-xs text-val-gray font-bold uppercase tracking-widest mb-0.5 md:mb-1">{t.map}</span>
+                  <span className="text-xl md:text-4xl text-white font-bold uppercase tracking-tighter italic drop-shadow-md">{result.map}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex-1 flex flex-col relative min-h-0 gap-2 md:gap-3">
+              <div className="flex-1 bg-blue-900/10 border-t-2 border-blue-500 p-2 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Shield className="w-64 h-64" /></div>
+                <div className="flex items-center gap-3 mb-1.5 relative z-10 pl-1 shrink-0">
+                  <h2 className="text-lg md:text-xl font-bold uppercase italic tracking-tighter text-blue-400 flex items-center gap-2">
+                    {t.defenders}
+                    {!config.autoTeams && <span className="text-sm font-normal text-val-light opacity-80 tracking-widest">[{defenderTeamName}]</span>}
+                  </h2>
+                  {config.useRanks && config.autoTeams && (
+                    <span className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded text-xs md:text-sm border border-blue-500/30">
+                      {t.teamWeight.replace('{weight}', String(defenderWeight))}
+                    </span>
+                  )}
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500/50 to-transparent"></div>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 md:gap-2 relative z-10 flex-1 min-h-0">
+                  {defenders.map(p => <PlayerCard key={p.id} player={p} isDefender={true} />)}
+                </div>
+              </div>
+
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none flex flex-col items-center gap-1">
+                <div className="bg-val-dark px-4 py-1 border-2 border-val-red text-val-red font-bold text-base md:text-lg italic shadow-2xl skew-x-[-10deg]"><div className="skew-x-[10deg]">VS</div></div>
+              </div>
+
+              <div className="flex-1 bg-red-900/10 border-t-2 border-val-red p-2 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Swords className="w-64 h-64" /></div>
+                <div className="flex items-center gap-3 mb-1.5 relative z-10 pl-1 shrink-0">
+                  <h2 className="text-lg md:text-xl font-bold uppercase italic tracking-tighter text-val-red flex items-center gap-2">
+                    {t.attackers}
+                    {!config.autoTeams && <span className="text-sm font-normal text-val-light opacity-80 tracking-widest">[{attackerTeamName}]</span>}
+                  </h2>
+                  {config.useRanks && config.autoTeams && (
+                    <span className="bg-red-900/40 text-val-red px-2 py-0.5 rounded text-xs md:text-sm border border-val-red/30">
+                      {t.teamWeight.replace('{weight}', String(attackerWeight))}
+                    </span>
+                  )}
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-val-red/50 to-transparent"></div>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 md:gap-2 relative z-10 flex-1 min-h-0">
+                  {attackers.map(p => <PlayerCard key={p.id} player={p} isDefender={false} />)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default App;
+</file>
+
+<file path="src/components/RoleIcon.tsx">
+// src/components/RoleIcon.tsx
+// AI Role: ロールアイコンのUIコンポーネント
+// 役割: 指定されたロール（Role）に対応するSVGアイコンを描画する
+
+import React from 'react';
+import { Role } from '../types';
+
+interface Props {
+  role: Role;
+  className?: string;
+}
+
+export const RoleIcon: React.FC<Props> = ({ role, className }) => {
+  switch (role) {
+    case 'Duelist':
+      return <svg viewBox="0 0 32 32" fill="none" className={className}><path fillRule="evenodd" clipRule="evenodd" d="M27.2574 24.3244C28.9808 21.9977 30 19.1179 30 16C30 13.1238 29.1326 10.4501 27.6452 8.22633L19.3613 16.4683L27.2574 24.3244ZM23.8326 27.6056L16 19.8126L8.16738 27.6056C10.4028 29.1172 13.0983 30 16 30C18.9017 30 21.5972 29.1172 23.8326 27.6056ZM4.7426 24.3244C3.0192 21.9977 2 19.1179 2 16C2 13.1238 2.86735 10.4501 4.35477 8.22633L12.6387 16.4683L4.7426 24.3244ZM7.6186 4.78503L16 13.124L24.3814 4.78503C22.0448 3.03594 19.1434 2 16 2C12.8566 2 9.95525 3.03594 7.6186 4.78503Z" fill="currentColor"/></svg>;
+    case 'Controller':
+      return <svg viewBox="0 0 32 32" fill="none" className={className}><path fillRule="evenodd" clipRule="evenodd" d="M29.9693 16.9343C29.9897 16.6255 30 16.3139 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 16.3346 2.01174 16.6665 2.03483 16.9953L16.0009 5.29395L29.9693 16.9343ZM28.5825 22.1457L16.0009 11.4704L3.43747 22.1863C4.22802 23.7886 5.3161 25.2179 6.62958 26.4019L16.0028 18.4707L25.5427 26.244C26.7901 25.0814 27.8249 23.6938 28.5825 22.1457ZM21.2613 28.9778L16.0028 24.6472L10.7424 28.9793C12.3657 29.6375 14.1405 30 16 30C17.8609 30 19.637 29.6369 21.2613 28.9778Z" fill="currentColor"/></svg>;
+    case 'Initiator':
+      return <svg viewBox="0 0 32 32" fill="none" className={className}><path fillRule="evenodd" clipRule="evenodd" d="M16.1031 2.00049L25.8819 17.6465H14.6469L21.9756 28.6644C26.7186 26.4225 30 21.5945 30 16.0001C30 8.30253 23.7876 2.05592 16.1031 2.00049ZM11.1827 2.85095L17.6466 13.1171H6.11719L17.0839 29.9588C16.7262 29.9862 16.3647 30.0001 16 30.0001C8.26801 30.0001 2 23.7321 2 16.0001C2 9.96085 5.82398 4.81472 11.1827 2.85095Z" fill="currentColor"/></svg>;
+    case 'Sentinel':
+      return <svg viewBox="0 0 32 32" fill="none" className={className}><path fillRule="evenodd" clipRule="evenodd" d="M18.0144 29.9971C24.792 29.0155 30 23.1545 30 16.0709C30 14.3035 29.6758 12.6122 29.0839 11.0538L18.0144 29.9971ZM14.0005 29.9993C7.21567 29.0241 2 23.1597 2 16.0709C2 14.2487 2.3446 12.5075 2.97187 10.9094L14.0005 29.9993ZM4.71274 7.74498L27.0558 7.43736C24.4942 4.12855 20.4944 2 16 2C11.3678 2 7.26106 4.26106 4.71274 7.74498Z" fill="currentColor"/><path d="M22.5827 12.3457H9.40625L15.9945 23.9335L22.5827 12.3457Z" fill="currentColor"/></svg>;
+    default:
+      return null;
+  }
+};
+</file>
+
+<file path="src/components/WeightController.tsx">
+// src/components/WeightController.tsx
+// AI Role: 数値入力UIコンポーネント
+// 役割: 重み付けを調整するためのコントローラーUIを提供する
+
+import React, { useState, useEffect } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+
+interface Props {
+  value: number;
+  onChange: (val: number) => void;
+  disabled?: boolean;
+}
+
+export const WeightController: React.FC<Props> = ({ value, onChange, disabled }) => {
+  const [localValue, setLocalValue] = useState<string>(value.toString());
+
+  useEffect(() => {
+    setLocalValue(value.toString());
+  }, [value]);
+
+  const handleAdjust = (delta: number) => {
+    const newVal = Math.max(0, value + delta);
+    onChange(newVal);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    if (val !== '') {
+      onChange(Number(val));
+    }
+  };
+
+  const handleBlur = () => {
+    if (localValue === '') {
+      onChange(10);
+    } else {
+      const numVal = Math.max(0, Number(localValue));
+      onChange(numVal);
+      setLocalValue(numVal.toString());
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 group/ctrl relative">
+      {!disabled && (
+        <div className="flex flex-col -gap-1 opacity-0 group-hover/ctrl:opacity-100 transition-opacity">
+          <button onClick={() => handleAdjust(1)} className="text-val-gray/60 hover:text-val-red transition-colors">
+            <ChevronUp className="w-3 h-3 md:w-4 md:h-4" />
+          </button>
+          <button onClick={() => handleAdjust(-1)} className="text-val-gray/60 hover:text-val-red transition-colors">
+            <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center bg-black/20 px-1 py-0.5 rounded border border-white/10 focus-within:border-val-red/40 transition-colors z-10">
+        <input
+          type="number"
+          min="0"
+          value={localValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          disabled={disabled}
+          className="bg-transparent text-val-light text-[10px] md:text-sm w-6 md:w-8 text-center outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+        />
+      </div>
+
+      {!disabled && (
+        <div className="relative flex items-center justify-center w-4 h-4 md:w-5 md:h-5 opacity-0 group-hover/ctrl:opacity-100 transition-opacity">
+          <select
+            value={value}
+            onChange={(e) => {
+              onChange(Number(e.target.value));
+              e.target.blur();
+            }}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+          >
+            <option value="" disabled className="hidden">Select</option>
+            {[10, 5, 4, 3, 2, 1, 0].map((val) => (
+              <option key={val} value={val} className="bg-val-dark text-val-light">
+                {val}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-val-gray/60 pointer-events-none" />
+        </div>
+      )}
+    </div>
+  );
+};
+</file>
+
+<file path="src/constants/valorant.ts">
+// src/constants/valorant.ts
+
+import { Rank, Role } from '../types';
+
+export const MAIN_WEAPONS = [
+  'Vandal', 'Phantom', 'Operator', 'Judge', 'Odin', 'Ares', 'Bucky', 'Bulldog', 
+  'Guardian', 'Marshal', 'Outlaw', 'Spectre', 'Stinger'
+];
+
+export const SUB_WEAPONS = [
+  'Classic', 'Shorty', 'Frenzy', 'Ghost', 'Sheriff', 'Bandit'
+];
+
+export const ROLES: Role[] = [
+  'Duelist', 'Initiator', 'Controller', 'Sentinel'
+];
+
+export const AGENTS = [
+  'Astra', 'Breach', 'Brimstone', 'Chamber', 'Clove', 'Cypher', 'Deadlock', 
+  'Fade', 'Gekko', 'Harbor', 'Iso', 'Jett', 'KAY/O', 'Killjoy', 'Miks', 
+  'Neon', 'Omen', 'Phoenix', 'Raze', 'Reyna', 'Sage', 'Skye', 'Sova', 
+  'Tejo', 'Veto', 'Viper', 'Vyse', 'Waylay', 'Yoru'
+];
+
+export const AGENT_ROLES: Record<string, Role> = {
+  'Astra': 'Controller', 'Breach': 'Initiator', 'Brimstone': 'Controller', 'Chamber': 'Sentinel',
+  'Clove': 'Controller', 'Cypher': 'Sentinel', 'Deadlock': 'Sentinel', 'Fade': 'Initiator',
+  'Gekko': 'Initiator', 'Harbor': 'Controller', 'Iso': 'Duelist', 'Jett': 'Duelist',
+  'KAY/O': 'Initiator', 'Killjoy': 'Sentinel', 'Miks': 'Initiator', 'Neon': 'Duelist',
+  'Omen': 'Controller', 'Phoenix': 'Duelist', 'Raze': 'Duelist', 'Reyna': 'Duelist',
+  'Sage': 'Sentinel', 'Skye': 'Initiator', 'Sova': 'Initiator', 'Tejo': 'Initiator',
+  'Veto': 'Duelist', 'Viper': 'Controller', 'Vyse': 'Sentinel', 'Waylay': 'Controller', 'Yoru': 'Duelist'
+};
+
+export const RANKS: Rank[] = [
+  'None', 'Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant'
+];
+
+// なぜ: HTMLから抽出した最新のマップリストに更新
+export const MAPS = [
+  'Abyss', 'Ascent', 'Bind', 'Breeze', 'Corrode', 'Fracture', 'Haven', 'Icebox', 'Lotus', 'Pearl', 'Split', 'Sunset'
+];
+</file>
+
+<file path="src/index.css">
+/* AI Role: グローバルスタイル定義 */
+/* 役割: Tailwind CSSのディレクティブの読み込み */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* なぜ: 背景色をアプリ全体に適用し、スクロールバー等のデフォルトスタイルを調整するため */
+body {
+  margin: 0;
+  background-color: #111111; 
+  color: #ece8e1; 
+}
+</file>
+
+<file path="src/locales/en.json">
+{
+  "title": "Valorant Custom",
+  "rules": "Rules",
+  "players": "Players (10)",
+  "autoTeams": "Auto Teams",
+  "useRanks": "Rank Balancing",
+  "restrictWeapons": "Random Weapons",
+  "restrictWeaponCombinations": "Weapon Combos",
+  "restrictAgents": "Random Agents",
+  "restrictRoles": "Random Roles",
+  "generate": "Generate",
+  "reroll": "Re-roll",
+  "team1": "Team 1",
+  "team2": "Team 2",
+  "defenders": "Defenders",
+  "attackers": "Attackers",
+  "playerName": "Player Name",
+  "unranked": "Unranked",
+  "anyRole": "Any Role",
+  "playerCount": "Players",
+  "noAgent": "No Agent",
+  "advancedSettings": "Advanced Settings",
+  "mapSettings": "Map Settings",
+  "weaponSettings": "Weapon Settings",
+  "agentSettings": "Agent Settings",
+  "weaponCombinations": "Weapon Combination Settings",
+  "selectMainWeapon": "Select Main Weapon",
+  "allowedSubWeapons": "Allowed Sub Weapons",
+  "ban": "BAN",
+  "weight": "Weight",
+  "backToSetup": "Back to Setup",
+  "map": "Map",
+  "bannedStatus": "BANNED",
+  "unbanConfirm": "{weapon} is currently banned.\nDo you want to unban and allow it?",
+  "maxRankDifference": "Max Rank Weight Difference",
+  "teamWeight": "Total Weight: {weight}",
+  "totalWeight": "Total Weight: {weight}"
+}
+</file>
+
+<file path="src/locales/ja.json">
+{
+  "title": "Valorant Custom",
+  "rules": "ルール設定",
+  "players": "プレイヤー (10人)",
+  "autoTeams": "自動チーム分け",
+  "useRanks": "ランク均等化",
+  "restrictWeapons": "ランダム武器",
+  "restrictWeaponCombinations": "武器組み合わせ制限",
+  "restrictAgents": "ランダムエージェント",
+  "restrictRoles": "ランダムロール",
+  "generate": "チーム作成",
+  "reroll": "再生成",
+  "team1": "チーム 1",
+  "team2": "チーム 2",
+  "defenders": "防衛側",
+  "attackers": "攻撃側",
+  "playerName": "プレイヤー名",
+  "unranked": "アンランク",
+  "anyRole": "ロール指定なし",
+  "playerCount": "人",
+  "noAgent": "エージェント未設定",
+  "advancedSettings": "詳細設定",
+  "mapSettings": "マップ設定",
+  "weaponSettings": "武器設定",
+  "agentSettings": "エージェント設定",
+  "weaponCombinations": "武器組み合わせ設定",
+  "selectMainWeapon": "メインウェポンを選択",
+  "allowedSubWeapons": "許可するサブウェポン",
+  "ban": "BAN",
+  "weight": "重み",
+  "backToSetup": "設定に戻る",
+  "map": "マップ",
+  "bannedStatus": "BANされています",
+  "unbanConfirm": "{weapon} はBANされています。\nBANを解除して許可しますか？",
+  "maxRankDifference": "ランクバランス許容重み差",
+  "teamWeight": "総重み: {weight}",
+  "totalWeight": "総重み: {weight}"
+}
+</file>
+
+<file path="src/logic/balancer.ts">
+// AI Role: チーム振り分けロジックの提供
+// 役割: プレイヤーのランク重み付けと固定チーム設定に基づくチーム分割
+
+// なぜ: Teamの型はPlayerインターフェースのプロパティとして内部で解決されており、このファイル内で直接型として宣言・利用されないため削除
+import { Player, Rank } from '../types';
+
+const RANK_WEIGHTS: Record<Rank, number> = {
+  None: 5,
+  Iron: 1,
+  Bronze: 2,
+  Silver: 3,
+  Gold: 4,
+  Platinum: 5,
+  Diamond: 6,
+  Ascendant: 7,
+  Immortal: 8,
+  Radiant: 9,
+};
+
+interface BalancedTeams {
+  team1: Player[];
+  team2: Player[];
+}
+
+export const balanceTeams = (players: Player[], useRanks: boolean): BalancedTeams => {
+  const team1: Player[] = [];
+  const team2: Player[] = [];
+  
+  let team1Weight = 0;
+  let team2Weight = 0;
+
+  const getWeight = (rank: Rank) => useRanks ? RANK_WEIGHTS[rank] : 0;
+
+  const flexiblePlayers: Player[] = [];
+  players.forEach(player => {
+    if (player.fixedTeam === 'Team 1') {
+      team1.push(player);
+      team1Weight += getWeight(player.rank);
+    } else if (player.fixedTeam === 'Team 2') {
+      team2.push(player);
+      team2Weight += getWeight(player.rank);
+    } else {
+      flexiblePlayers.push(player);
+    }
+  });
+
+  const sortedPlayers = [...flexiblePlayers].sort((a, b) => getWeight(b.rank) - getWeight(a.rank));
+
+  sortedPlayers.forEach(player => {
+    const weight = getWeight(player.rank);
+    
+    if (team1.length < team2.length) {
+      team1.push(player);
+      team1Weight += weight;
+    } else if (team2.length < team1.length) {
+      team2.push(player);
+      team2Weight += weight;
+    } else {
+      if (team1Weight <= team2Weight) {
+        team1.push(player);
+        team1Weight += weight;
+      } else {
+        team2.push(player);
+        team2Weight += weight;
+      }
+    }
+  });
+
+  return { team1, team2 };
+};
+</file>
+
+<file path="src/logic/randomizer.ts">
+// src/logic/randomizer.ts
+// AI Role: コアロジックの提供
+// 役割: アイテム抽選のデフォルト重みを10に変更。また、チーム内でのエージェント重複を防止する。
+
+import { Player, PlayerResult, RandomizerConfig, AdvancedConfig, Rank, Tier, Team, Side, MatchResult } from '../types';
+import { MAIN_WEAPONS, SUB_WEAPONS, AGENTS, ROLES, AGENT_ROLES, MAPS } from '../constants/valorant';
+
+export const getRankWeight = (rank: Rank, tier: Tier): number => {
+  if (rank === 'None') return 0;
+  if (rank === 'Radiant') return 100;
+  
+  const rankScores: Record<Rank, number> = {
+    'None': 0, 'Iron': 10, 'Bronze': 20, 'Silver': 30, 'Gold': 40,
+    'Platinum': 50, 'Diamond': 60, 'Ascendant': 70, 'Immortal': 80, 'Radiant': 100
+  };
+  
+  return rankScores[rank] + (tier - 1) * 3;
+};
+
+const balanceTeams = (players: Player[], maxDiff: number): { team1: Player[]; team2: Player[] } => {
+  let bestTeam1: Player[] = [];
+  let bestTeam2: Player[] = [];
+  let minDiff = Infinity;
+
+  for (let i = 0; i < 100; i++) {
+    const shuffled = [...players].sort(() => 0.5 - Math.random());
+    const t1: Player[] = [];
+    const t2: Player[] = [];
+    let w1 = 0;
+    let w2 = 0;
+
+    for (const p of shuffled) {
+      const pWeight = getRankWeight(p.rank, p.tier);
+      if (t1.length < Math.ceil(players.length / 2) && (w1 <= w2 || t2.length >= Math.floor(players.length / 2))) {
+        t1.push(p);
+        w1 += pWeight;
+      } else {
+        t2.push(p);
+        w2 += pWeight;
+      }
+    }
+
+    const diff = Math.abs(w1 - w2);
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestTeam1 = t1;
+      bestTeam2 = t2;
+    }
+
+    if (minDiff <= maxDiff) {
+      break;
+    }
+  }
+
+  return { team1: bestTeam1, team2: bestTeam2 };
+};
+
+const getRandomItem = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+const getWeightedRandomItem = <T extends string>(items: T[], banned: string[], weights: Record<string, number>): T | undefined => {
+  const validItems = items.filter(i => !banned.includes(i) && (weights[i] ?? 10) > 0);
+  if (validItems.length === 0) return undefined;
+
+  const totalWeight = validItems.reduce((sum, item) => sum + (weights[item] ?? 10), 0);
+  let rand = Math.random() * totalWeight;
+
+  for (const item of validItems) {
+    rand -= (weights[item] ?? 10);
+    if (rand <= 0) return item;
+  }
+  return validItems[validItems.length - 1];
+};
+
+export const generateMatch = (players: Player[], config: RandomizerConfig, advanced: AdvancedConfig): MatchResult => {
+  let team1: Player[] = [];
+  let team2: Player[] = [];
+
+  if (!config.autoTeams) {
+    team1 = players.filter(p => p.fixedTeam === 'Team 1');
+    team2 = players.filter(p => p.fixedTeam === 'Team 2');
+  } else if (config.useRanks) {
+    const balanced = balanceTeams(players, advanced.maxRankWeightDifference);
+    team1 = balanced.team1;
+    team2 = balanced.team2;
+  } else {
+    const shuffled = [...players].sort(() => 0.5 - Math.random());
+    const half = Math.ceil(shuffled.length / 2);
+    team1 = shuffled.slice(0, half);
+    team2 = shuffled.slice(half);
+  }
+
+  const isTeam1Attacker = Math.random() > 0.5;
+  const team1Side: Side = isTeam1Attacker ? 'Attacker' : 'Defender';
+  const team2Side: Side = isTeam1Attacker ? 'Defender' : 'Attacker';
+
+  const selectedMap = getWeightedRandomItem(MAPS, advanced.bannedMaps, advanced.mapWeights);
+
+  // チームごとの使用済みエージェントを記録するSet
+  const team1UsedAgents = new Set<string>();
+  const team2UsedAgents = new Set<string>();
+
+  // usedAgents 引数を追加し、割り当て済みのエージェントを追跡・除外する
+  const mapToResult = (p: Player, team: Team, side: Side, usedAgents: Set<string>): PlayerResult => {
+    const res: PlayerResult = { ...p, assignedTeam: team, assignedSide: side };
+
+    if (config.restrictRoles) {
+      res.role = getRandomItem(ROLES);
+    } else {
+      res.role = p.preferredRoles.length > 0 ? getRandomItem(p.preferredRoles) : getRandomItem(ROLES);
+    }
+
+    if (config.restrictAgents) {
+      // 指定されたロールを持ち、かつ「まだこのチームで選ばれていない(usedAgentsにない)」エージェントに絞り込む
+      const roleAgents = AGENTS.filter(a => AGENT_ROLES[a] === res.role && !usedAgents.has(a));
+      res.agent = getWeightedRandomItem(roleAgents, advanced.bannedAgents, advanced.agentWeights);
+      
+      if (!res.agent) {
+        // ロール縛りで枯渇した場合は、ロールを無視して「まだ選ばれていない」エージェントから選択
+        const availableAgents = AGENTS.filter(a => !usedAgents.has(a));
+        res.agent = getWeightedRandomItem(availableAgents, advanced.bannedAgents, advanced.agentWeights);
+      }
+
+      if (res.agent) {
+        // 選択されたエージェントを使用済みとして登録する
+        usedAgents.add(res.agent);
+        if (AGENT_ROLES[res.agent]) {
+          res.role = AGENT_ROLES[res.agent];
+        }
+      }
+    } else {
+      res.agent = undefined; 
+    }
+
+    if (config.restrictWeapons) {
+      res.mainWeapon = getWeightedRandomItem(MAIN_WEAPONS, advanced.bannedWeapons, advanced.weaponWeights);
+      
+      let availableSubs = SUB_WEAPONS;
+      if (config.restrictWeaponCombinations && res.mainWeapon) {
+        const comboAllowed = advanced.weaponCombinations[res.mainWeapon];
+        if (comboAllowed) {
+          availableSubs = comboAllowed;
+        }
+      }
+      
+      res.subWeapon = getWeightedRandomItem(availableSubs, advanced.bannedWeapons, advanced.weaponWeights);
+    }
+
+    return res;
+  };
+
+  return {
+    map: selectedMap,
+    team1Side,
+    team2Side,
+    // プレイヤーのマッピング時にチームの usedAgents を渡す
+    team1: team1.map(p => mapToResult(p, 'Team 1', team1Side, team1UsedAgents)),
+    team2: team2.map(p => mapToResult(p, 'Team 2', team2Side, team2UsedAgents)),
+  };
+};
+</file>
+
+<file path="src/logic/validator.ts">
+// src/logic/validator.ts
+// AI: チーム作成前の事前検証ロジック
+import { Agent } from '../types';
+
+export const validateTeamCreation = (
+  agents: Agent[],
+  allowDuplicateAgents: boolean
+): { isValid: boolean; errorMessageKey: string | null } => {
+  if (!allowDuplicateAgents) {
+    const unbannedAgents = agents.filter(agent => !agent.isBanned);
+    
+    // 重複なしで1チーム5人を構成するには最低5体のエージェントが必要
+    if (unbannedAgents.length <= 4) {
+      return {
+        isValid: false,
+        errorMessageKey: 'notEnoughAgentsWarning'
+      };
+    }
+  }
+
+  return {
+    isValid: true,
+    errorMessageKey: null
+  };
+};
+</file>
+
+<file path="src/main.tsx">
+// AI Role: アプリケーションのエントリポイント
+// 役割: ReactコンポーネントツリーをDOMにマウントする
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+</file>
+
+<file path="src/types.ts">
+// src/types.ts
+// AI Role: 型定義の提供
+// 役割: ランクバランス許容差の型を追加
+
+export type Team = 'Team 1' | 'Team 2';
+export type Side = 'Attacker' | 'Defender';
+export type Role = 'Duelist' | 'Initiator' | 'Controller' | 'Sentinel';
+export type Rank = 'None' | 'Iron' | 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' | 'Ascendant' | 'Immortal' | 'Radiant';
+export type Tier = 1 | 2 | 3;
+
+export interface Player {
+  id: string;
+  name: string;
+  rank: Rank;
+  tier: Tier;
+  fixedTeam: Team | null;
+  preferredRoles: Role[];
+}
+
+export interface PlayerResult extends Player {
+  assignedTeam: Team;
+  assignedSide: Side;
+  mainWeapon?: string;
+  subWeapon?: string;
+  agent?: string;
+  role?: Role;
+}
+
+export interface RandomizerConfig {
+  autoTeams: boolean;
+  useRanks: boolean;
+  restrictWeapons: boolean;
+  restrictWeaponCombinations: boolean;
+  restrictAgents: boolean;
+  restrictRoles: boolean;
+}
+
+export interface AdvancedConfig {
+  bannedMaps: string[];
+  bannedWeapons: string[];
+  bannedAgents: string[];
+  mapWeights: Record<string, number>;
+  weaponWeights: Record<string, number>;
+  agentWeights: Record<string, number>;
+  weaponCombinations: Record<string, string[]>;
+  maxRankWeightDifference: number; // 追加: 許容する重み差
+}
+
+export interface MatchResult {
+  map?: string;
+  team1: PlayerResult[];
+  team2: PlayerResult[];
+  team1Side: Side;
+  team2Side: Side;
+}
+</file>
+
+<file path="src/types/index.ts">
+// src/types/index.ts
+// AI Role: ドメインモデルと型定義の提供
+// 役割: アプリケーション全体で利用するデータ構造の定義
+
+export type Rank = 'None' | 'Iron' | 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' | 'Ascendant' | 'Immortal' | 'Radiant';
+export type Team = 'Team1' | 'Team2';
+export type Side = 'Attacker' | 'Defender';
+export type Role = 'Duelist' | 'Initiator' | 'Controller' | 'Sentinel';
+
+export interface Player {
+  id: string;
+  name: string;
+  rank: Rank;
+  fixedTeam?: Team | null; // nullの場合はランダム振り分けの対象
+}
+
+export interface PlayerResult extends Player {
+  assignedTeam: Team;
+  assignedSide: Side;
+  mainWeapon?: string;
+  subWeapon?: string;
+  agent?: string;
+  role?: Role;
+}
+
+export interface RandomizerConfig {
+  useRanks: boolean;
+  restrictWeapons: boolean;
+  restrictAgents: boolean;
+  restrictRoles: boolean;
+}
+</file>
+
+<file path="tailwind.config.js">
+// AI Role: スタイル定義の提供
+// 役割: Valorantのデザインシステムに基づいたカスタムカラーとアニメーションの定義
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        val: {
+          red: '#ff4655',
+          dark: '#111111',
+          light: '#ece8e1',
+          gray: '#768079',
+          blue: '#0f1923'
+        }
+      },
+      fontFamily: {
+        // なぜ: ValorantのUIに近い直線的でインパクトのあるフォントスタックを指定
+        sans: ['Inter', 'Oswald', 'sans-serif'], 
+      },
+      animation: {
+        'glitch': 'glitch 0.2s cubic-bezier(.25, .46, .45, .94) both infinite',
+        'slide-up': 'slideUp 0.3s ease-out forwards',
+      },
+      keyframes: {
+        glitch: {
+          '0%': { transform: 'translate(0)' },
+          '20%': { transform: 'translate(-2px, 2px)' },
+          '40%': { transform: 'translate(-2px, -2px)' },
+          '60%': { transform: 'translate(2px, 2px)' },
+          '80%': { transform: 'translate(2px, -2px)' },
+          '100%': { transform: 'translate(0)' }
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' }
+        }
+      }
+    },
+  },
+  plugins: [],
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* なぜ: Vitestの型定義をTypeScriptに認識させるため */
+    "types": ["vitest/globals"]
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+</file>
+
+<file path="tsconfig.node.json">
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
+}
+</file>
+
+<file path="vite.config.ts">
+// AI Role: ビルド・テスト・サーバー設定の提供
+// 役割: Viteのビルド・開発サーバー設定およびVitestのテスト環境設定
+
+// なぜ: viteのdefineConfigではなく、vitest/configのdefineConfigを使うことで'test'プロパティの型エラーを完全に解消できるため
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  // なぜ: npm run dev実行時に自動でブラウザを開くようにするため
+  server: {
+    open: true,
+  },
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+  },
+});
+</file>
+
+</files>
