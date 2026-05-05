@@ -38,7 +38,6 @@ const getRankImagePath = (rank: Rank, tier: Tier) => {
   return `/images/ranks/${rank}_${tier}_Rank.png`;
 };
 
-// なぜ: 詳細設定画面と初期画面のカードUIを共通化し、重み変更時の一時表示アニメーションを追加するため
 const ItemCard: React.FC<{
   item: string;
   category: 'maps' | 'weapons' | 'agents';
@@ -51,16 +50,18 @@ const ItemCard: React.FC<{
   className?: string;
 }> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t, className = "" }) => {
   const [imgError, setImgError] = useState(false);
-  const [showWeightOverlay, setShowWeightOverlay] = useState(false);
+  const [overlayOpacity, setOverlayOpacity] = useState(0);
   const [prevWeight, setPrevWeight] = useState(currentWeight);
 
   useEffect(() => {
     if (currentWeight !== prevWeight) {
-      setShowWeightOverlay(true);
       setPrevWeight(currentWeight);
+      setOverlayOpacity(1); 
+      
       const timer = setTimeout(() => {
-        setShowWeightOverlay(false);
-      }, 600); // 変更後0.6秒間保持し、その後CSS transitionでフェードアウト
+        setOverlayOpacity(0); 
+      }, 300);
+      
       return () => clearTimeout(timer);
     }
   }, [currentWeight, prevWeight]);
@@ -88,49 +89,54 @@ const ItemCard: React.FC<{
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full text-center p-1">
-            <span className={`text-[8px] md:text-[10px] font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
+            <span className={`text-[10px] md:text-xs font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
           </div>
         )}
         
         {isBanned && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/30 z-10">
-            <Ban className="w-6 h-6 md:w-8 md:h-8 text-val-red drop-shadow-md mb-0.5" />
-            <span className="text-[7px] md:text-[8px] text-white font-bold leading-tight px-1 whitespace-nowrap">BANNED</span>
+            <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-0.5" />
+            <span className="text-[10px] md:text-xs text-white font-bold leading-tight px-1 whitespace-nowrap tracking-wider">BANNED</span>
           </div>
         )}
 
-        {/* 重み変更時の一時表示オーバーレイ */}
-        <div className={`absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-20 pointer-events-none transition-opacity duration-1000 ${showWeightOverlay && !isBanned ? 'opacity-100' : 'opacity-0'}`}>
-          <span className="text-val-gray text-[9px] md:text-xs uppercase font-bold tracking-widest">{t.weight}</span>
-          <span className="text-4xl md:text-5xl text-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{currentWeight}</span>
+        <div 
+          className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 pointer-events-none"
+          style={{
+            opacity: isBanned ? 0 : overlayOpacity,
+            transition: overlayOpacity === 1 ? 'none' : 'opacity 1s ease-out'
+          }}
+        >
+          <span className="text-val-gray text-xs md:text-sm uppercase font-bold tracking-widest">{t.weight}</span>
+          <span className="text-5xl md:text-6xl text-white font-bold drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">{currentWeight}</span>
         </div>
         
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1.5 pt-6 pointer-events-none text-center z-10">
-          <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-8 pointer-events-none text-center z-10">
+          <div className={`font-bold text-xs md:text-sm truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
             <span>{item}</span>
           </div>
         </div>
       </button>
 
-      <div className="flex items-center justify-between px-1 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1 mt-auto">
+      <div className="flex items-center justify-between px-1.5 py-1.5 md:py-2 bg-black/40 rounded border border-val-gray/30 relative gap-1 mt-auto">
         {!isBanned ? (
-          <button onClick={() => onUpdateWeight(Math.max(0, currentWeight - 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Decrease Weight">
-            <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
+          <button onClick={() => onUpdateWeight(Math.max(0, currentWeight - 1))} className="text-val-gray hover:text-val-red transition-colors p-1.5 md:p-2 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Decrease Weight">
+            <ChevronDown className="w-5 h-5 md:w-7 md:h-7" />
           </button>
         ) : (
-          <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
+          <div className="w-8 h-8 md:w-11 md:h-11 shrink-0"></div>
         )}
         
-        <span className={`text-sm md:text-base font-mono font-bold text-center flex-1 ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
+        <span className={`text-lg md:text-xl lg:text-2xl font-mono font-bold text-center flex-1 tracking-wider ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
           {probability}%
         </span>
 
         {!isBanned ? (
-          <button onClick={() => onUpdateWeight(Math.max(0, currentWeight + 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Increase Weight">
-            <ChevronUp className="w-4 h-4 md:w-5 md:h-5" />
+          <button onClick={() => onUpdateWeight(Math.max(0, currentWeight + 1))} className="text-val-gray hover:text-val-red transition-colors p-1.5 md:p-2 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Increase Weight">
+            <ChevronUp className="w-5 h-5 md:w-7 md:h-7" />
           </button>
         ) : (
-          <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
+          <div className="w-8 h-8 md:w-11 md:h-11 shrink-0"></div>
         )}
       </div>
     </div>
@@ -160,23 +166,23 @@ const QuickBanCarousel: React.FC<{
     }
   };
 
-  const widthClass = category === 'agents' ? 'w-20 md:w-28' : 'w-28 md:w-44';
+  const widthClass = category === 'agents' ? 'w-24 md:w-32 lg:w-36' : 'w-36 md:w-48 lg:w-56';
   const activeWeight = items.reduce((sum, item) => bannedList.includes(item) ? sum : sum + (weights[item] ?? 10), 0);
   
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between items-end px-1 mb-1">
-        <span className="text-xs md:text-sm font-bold text-val-gray">{title}</span>
+        <span className="text-sm md:text-base font-bold text-val-gray">{title}</span>
       </div>
       <div className="relative group flex items-center">
         <button 
           onClick={() => scroll('left')} 
           className="absolute left-0 z-20 bg-black/80 hover:bg-val-red p-1 md:p-2 rounded-r opacity-0 group-hover:opacity-100 transition-all shadow-lg"
         >
-          <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <ChevronLeft className="w-5 h-5 md:w-8 md:h-8 text-white" />
         </button>
 
-        <div ref={scrollRef} className="flex overflow-x-auto gap-3 pb-4 pt-1 snap-x scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] w-full px-1">
+        <div ref={scrollRef} className="flex overflow-x-auto gap-4 pb-4 pt-1 snap-x scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] w-full px-1">
           {items.map(item => {
             const isBanned = bannedList.includes(item);
             const currentWeight = weights[item] ?? 10;
@@ -201,7 +207,7 @@ const QuickBanCarousel: React.FC<{
           onClick={() => scroll('right')} 
           className="absolute right-0 z-20 bg-black/80 hover:bg-val-red p-1 md:p-2 rounded-l opacity-0 group-hover:opacity-100 transition-all shadow-lg"
         >
-          <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <ChevronRight className="w-5 h-5 md:w-8 md:h-8 text-white" />
         </button>
       </div>
     </div>
@@ -216,11 +222,11 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
 
   return (
     <div className={`bg-black/60 border ${borderColor} ${hoverColor} transition-colors flex flex-col h-full overflow-hidden relative group`}>
-      <div className="p-1 md:p-1.5 flex justify-between items-center bg-val-dark z-10 border-b border-val-gray/20">
-        <div className="font-bold text-xs md:text-sm truncate pr-1 text-white">{player.name}</div>
+      <div className="p-1.5 md:p-2 flex justify-between items-center bg-val-dark z-10 border-b border-val-gray/20">
+        <div className="font-bold text-sm md:text-base truncate pr-1 text-white">{player.name}</div>
         {player.rank !== 'None' && (
           <div className="flex items-center gap-1">
-            <span className="text-[9px] md:text-[10px] font-bold bg-val-gray/20 px-1 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
+            <span className="text-[10px] md:text-xs font-bold bg-val-gray/20 px-1.5 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
               {player.rank === 'Radiant' ? player.rank : `${player.rank} ${player.tier}`}
             </span>
           </div>
@@ -231,14 +237,14 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
         <div className={`p-1 z-10 bg-val-dark/90 border-b border-val-gray/20 grid gap-1 ${weaponCount === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {player.mainWeapon && (
             <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
-              <img src={getImagePath('weapons', player.mainWeapon)} alt={player.mainWeapon} className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
-              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[9px] px-1 text-val-light font-bold truncate max-w-full">{player.mainWeapon}</span>
+              <img src={getImagePath('weapons', player.mainWeapon)} alt={player.mainWeapon} className="w-full h-full object-contain p-0.5" onError={(e) => e.currentTarget.style.display = 'none'} />
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[9px] md:text-[11px] px-1 text-val-light font-bold truncate max-w-full">{player.mainWeapon}</span>
             </div>
           )}
           {player.subWeapon && (
             <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
-              <img src={getImagePath('weapons', player.subWeapon)} alt={player.subWeapon} className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
-              <span className="absolute bottom-0 left-0 bg-black/70 text-[7px] md:text-[8px] px-1 text-val-light font-bold truncate max-w-full">{player.subWeapon}</span>
+              <img src={getImagePath('weapons', player.subWeapon)} alt={player.subWeapon} className="w-full h-full object-contain p-0.5" onError={(e) => e.currentTarget.style.display = 'none'} />
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[10px] px-1 text-val-light font-bold truncate max-w-full">{player.subWeapon}</span>
             </div>
           )}
         </div>
@@ -250,7 +256,7 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
             <img 
               src={getRankImagePath(player.rank, player.tier)} 
               alt={player.rank} 
-              className="w-8 h-8 md:w-12 md:h-12 object-contain drop-shadow-lg"
+              className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-lg"
               onError={(e) => e.currentTarget.style.display = 'none'}
             />
           </div>
@@ -267,12 +273,12 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-yellow-400 font-bold text-xs md:text-sm uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{player.agent}</span>
+                <span className="text-yellow-400 font-bold text-sm md:text-base uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{player.agent}</span>
               </div>
             )}
             {player.role && (
               <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-val-dark/80 p-1 md:p-1.5 rounded-full border border-val-gray/30">
-                <RoleIcon role={player.role} className="w-3 h-3 md:w-4 md:h-4 text-white opacity-90 drop-shadow-md" />
+                <RoleIcon role={player.role} className="w-4 h-4 md:w-5 md:h-5 text-white opacity-90 drop-shadow-md" />
               </div>
             )}
           </>
@@ -280,8 +286,8 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 md:gap-4 bg-val-dark/50">
             {player.role && (
               <>
-                <RoleIcon role={player.role} className="w-10 h-10 md:w-16 md:h-16 text-val-light opacity-80 drop-shadow-lg" />
-                <span className="text-val-light font-bold text-xs md:text-sm uppercase tracking-widest">{player.role}</span>
+                <RoleIcon role={player.role} className="w-12 h-12 md:w-20 md:h-20 text-val-light opacity-80 drop-shadow-lg" />
+                <span className="text-val-light font-bold text-sm md:text-base uppercase tracking-widest">{player.role}</span>
               </>
             )}
           </div>
@@ -410,7 +416,7 @@ const App: React.FC = () => {
   };
 
   const renderToggle = (key: keyof RandomizerConfig, label: string) => (
-    <label key={key} className="flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded hover:bg-black/50">
+    <label key={key} className="flex items-center gap-3 cursor-pointer group bg-black/30 px-3 py-2 md:px-4 md:py-2.5 transition-colors rounded hover:bg-black/50">
       <div className="relative pointer-events-none shrink-0">
         <input 
           type="checkbox" 
@@ -418,23 +424,23 @@ const App: React.FC = () => {
           checked={config[key]}
           onChange={() => toggleConfig(key)}
         />
-        <div className={`w-8 h-4 rounded-full transition-colors ${config[key] ? 'bg-val-red' : 'bg-val-gray'}`}></div>
-        <div className={`absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform ${config[key] ? 'translate-x-4' : ''}`}></div>
+        <div className={`w-10 h-5 md:w-12 md:h-6 rounded-full transition-colors ${config[key] ? 'bg-val-red' : 'bg-val-gray'}`}></div>
+        <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 md:w-5 md:h-5 rounded-full transition-transform ${config[key] ? 'translate-x-5 md:translate-x-6' : ''}`}></div>
       </div>
-      <span className="uppercase text-xs md:text-sm tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label}</span>
+      <span className="uppercase text-sm md:text-base tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label}</span>
     </label>
   );
 
   const renderPlayerRow = (player: Player, index: number) => (
-    <div key={player.id} className="bg-black/40 p-2 border border-val-gray/20 focus-within:border-val-red transition-colors flex items-center gap-2 md:gap-3">
-      <span className="text-val-gray font-bold w-4 md:w-5 text-sm md:text-base text-right shrink-0">
+    <div key={player.id} className="bg-black/40 p-2 md:p-3 border border-val-gray/20 focus-within:border-val-red transition-colors flex items-center gap-2 md:gap-3">
+      <span className="text-val-gray font-bold w-5 md:w-6 text-base md:text-lg text-right shrink-0">
         {index + 1}.
       </span>
 
       {!config.autoTeams && (
         <button
           onClick={() => updatePlayerTeam(index, player.fixedTeam === 'Team 1' ? 'Team 2' : 'Team 1')}
-          className={`p-1 text-[10px] md:text-xs font-bold w-7 md:w-8 rounded shrink-0 transition-colors ${player.fixedTeam === 'Team 1' ? 'bg-blue-500 text-white' : 'bg-red-500 text-white'}`}
+          className={`p-1.5 text-xs md:text-sm font-bold w-8 md:w-10 rounded shrink-0 transition-colors ${player.fixedTeam === 'Team 1' ? 'bg-blue-500 text-white' : 'bg-red-500 text-white'}`}
           title="Click to change team"
         >
           {player.fixedTeam === 'Team 1' ? 'T1' : 'T2'}
@@ -445,25 +451,25 @@ const App: React.FC = () => {
         type="text"
         value={player.name}
         onChange={(e) => updatePlayerName(index, e.target.value)}
-        className="bg-transparent border-b border-val-gray/50 focus:border-val-red outline-none px-2 py-0.5 flex-1 text-sm md:text-base min-w-[60px]"
+        className="bg-transparent border-b border-val-gray/50 focus:border-val-red outline-none px-2 py-1 flex-1 text-base md:text-lg min-w-[80px]"
         placeholder={t.playerName}
       />
       
-      <div className="flex gap-1 shrink-0 items-center">
+      <div className="flex gap-1.5 md:gap-2 shrink-0 items-center">
         {player.rank !== 'None' ? (
           <img 
             src={getRankImagePath(player.rank, player.tier)} 
             alt={player.rank} 
-            className="w-6 h-6 md:w-8 md:h-8 object-contain"
+            className="w-8 h-8 md:w-10 md:h-10 object-contain"
             onError={(e) => e.currentTarget.style.display = 'none'}
           />
         ) : (
-          <div className="w-6 h-6 md:w-8 md:h-8" />
+          <div className="w-8 h-8 md:w-10 md:h-10" />
         )}
         <select
           value={player.rank}
           onChange={(e) => updatePlayerRank(index, e.target.value as Rank)}
-          className="bg-val-dark border border-val-gray/50 text-val-light text-xs md:text-sm p-1 md:p-1.5 w-[85px] outline-none focus:border-val-red cursor-pointer"
+          className="bg-val-dark border border-val-gray/50 text-val-light text-sm md:text-base p-1.5 md:p-2 w-[100px] md:w-[120px] outline-none focus:border-val-red cursor-pointer"
         >
           {RANKS.map(rank => (
             <option key={rank} value={rank}>
@@ -475,7 +481,7 @@ const App: React.FC = () => {
           <select
             value={player.tier}
             onChange={(e) => updatePlayerTier(index, Number(e.target.value) as Tier)}
-            className="bg-val-dark border border-val-gray/50 text-val-light text-xs md:text-sm p-1 md:p-1.5 w-[40px] outline-none focus:border-val-red cursor-pointer"
+            className="bg-val-dark border border-val-gray/50 text-val-light text-sm md:text-base p-1.5 md:p-2 w-[45px] md:w-[50px] outline-none focus:border-val-red cursor-pointer"
           >
             <option value={1}>1</option>
             <option value={2}>2</option>
@@ -484,17 +490,17 @@ const App: React.FC = () => {
         )}
       </div>
 
-      <div className="flex gap-1 items-center bg-black/30 p-1 rounded border border-val-gray/30 shrink-0">
+      <div className="flex gap-1 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
         {ROLES.map(role => {
           const isSelected = player.preferredRoles.includes(role);
           return (
             <button
               key={role}
               onClick={() => togglePlayerRole(index, role)}
-              className={`p-1 rounded transition-colors ${isSelected ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]' : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'}`}
+              className={`p-1.5 md:p-2 rounded transition-colors ${isSelected ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]' : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'}`}
               title={role}
             >
-              <RoleIcon role={role} className="w-3 h-3 md:w-4 md:h-4 drop-shadow-md" />
+              <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5 drop-shadow-md" />
             </button>
           );
         })}
@@ -510,8 +516,8 @@ const App: React.FC = () => {
     const activeWeight = items.reduce((sum, item) => advanced[banKey].includes(item) ? sum : sum + (advanced[weightKey][item] ?? 10), 0);
 
     return (
-      <details className="bg-black/30 p-4 border-l-4 border-val-gray group mb-4 shadow-xl">
-        <summary className="font-bold text-lg cursor-pointer flex justify-between items-center outline-none">
+      <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-4 md:mb-6 shadow-xl">
+        <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
           <div className="flex items-center gap-3">
             {title}
           </div>
@@ -519,10 +525,10 @@ const App: React.FC = () => {
         </summary>
 
         {category === 'agents' && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               onClick={() => setAgentFilter('All')}
-              className={`px-3 py-1.5 border rounded text-xs md:text-sm font-bold transition-colors ${agentFilter === 'All' ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
+              className={`px-4 py-2 border rounded text-sm md:text-base font-bold transition-colors ${agentFilter === 'All' ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
             >
               ALL
             </button>
@@ -530,15 +536,15 @@ const App: React.FC = () => {
               <button
                 key={role}
                 onClick={() => setAgentFilter(role)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 border rounded text-xs md:text-sm font-bold transition-colors ${agentFilter === role ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
+                className={`flex items-center gap-2 px-4 py-2 border rounded text-sm md:text-base font-bold transition-colors ${agentFilter === role ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
               >
-                <RoleIcon role={role} className="w-3 h-3 md:w-4 md:h-4" /> {role}
+                <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5" /> {role}
               </button>
             ))}
           </div>
         )}
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 mt-4 overflow-visible pb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5 mt-6 overflow-visible pb-12">
           {displayedItems.map(item => (
             <ItemCard 
               key={item}
@@ -622,46 +628,46 @@ const App: React.FC = () => {
         
         {screen === 'setup' && (
           <div className="space-y-4 md:space-y-6 animate-slide-up overflow-y-auto pb-10">
-            <section className="bg-val-blue border-l-4 border-val-red p-4 md:p-5">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg md:text-xl font-bold uppercase italic flex items-center gap-2">
-                  <Settings2 className="text-val-red w-5 h-5" /> {t.rules}
+            <section className="bg-val-blue border-l-4 border-val-red p-4 md:p-6">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="text-xl md:text-2xl font-bold uppercase italic flex items-center gap-2">
+                  <Settings2 className="text-val-red w-6 h-6" /> {t.rules}
                 </h2>
                 <button 
                   onClick={() => setScreen('advanced')}
-                  className="bg-val-gray/20 hover:bg-val-gray/40 text-val-light px-3 py-1.5 rounded text-xs md:text-sm flex items-center gap-2 transition-colors border border-val-gray/30"
+                  className="bg-val-gray/20 hover:bg-val-gray/40 text-val-light px-4 py-2 rounded text-sm md:text-base flex items-center gap-2 transition-colors border border-val-gray/30"
                 >
-                  <SlidersHorizontal className="w-4 h-4 text-val-red" /> {t.advancedSettings}
+                  <SlidersHorizontal className="w-5 h-5 text-val-red" /> {t.advancedSettings}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
-                  <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryTeam}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="bg-val-dark/50 p-4 rounded border border-val-gray/20 flex flex-col gap-3">
+                  <h3 className="text-base md:text-lg font-bold text-val-gray border-b border-val-gray/30 pb-2 mb-1">{t.categoryTeam}</h3>
                   {renderToggle('autoTeams', t.autoTeams)}
                   {config.autoTeams && (
-                    <div className="pl-4 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-2">
+                    <div className="pl-5 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-3">
                       {renderToggle('useRanks', t.useRanks)}
                     </div>
                   )}
                 </div>
 
-                <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
-                  <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryAgent}</h3>
+                <div className="bg-val-dark/50 p-4 rounded border border-val-gray/20 flex flex-col gap-3">
+                  <h3 className="text-base md:text-lg font-bold text-val-gray border-b border-val-gray/30 pb-2 mb-1">{t.categoryAgent}</h3>
                   {renderToggle('restrictAgents', t.restrictAgents)}
                   {config.restrictAgents && (
-                    <div className="pl-4 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-2">
+                    <div className="pl-5 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-3">
                       {renderToggle('allowDuplicateAgents', t.allowDuplicateAgents)}
                     </div>
                   )}
                   {renderToggle('restrictRoles', t.restrictRoles)}
                 </div>
 
-                <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
-                  <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryWeapon}</h3>
+                <div className="bg-val-dark/50 p-4 rounded border border-val-gray/20 flex flex-col gap-3">
+                  <h3 className="text-base md:text-lg font-bold text-val-gray border-b border-val-gray/30 pb-2 mb-1">{t.categoryWeapon}</h3>
                   {renderToggle('restrictWeapons', t.restrictWeapons)}
                   {config.restrictWeapons && (
-                    <div className="pl-4 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-2">
+                    <div className="pl-5 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-3">
                       {renderToggle('restrictWeaponCombinations', t.restrictWeaponCombinations)}
                     </div>
                   )}
@@ -669,44 +675,44 @@ const App: React.FC = () => {
               </div>
             </section>
 
-            <section className="bg-val-blue border-l-4 border-val-gray p-4 md:p-5">
-              <h2 className="text-lg md:text-xl font-bold mb-3 uppercase italic flex items-center gap-2">
-                <Users className="text-val-gray w-5 h-5" /> {t.players}
+            <section className="bg-val-blue border-l-4 border-val-gray p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-bold mb-5 uppercase italic flex items-center gap-2">
+                <Users className="text-val-gray w-6 h-6" /> {t.players}
               </h2>
 
               {!config.autoTeams ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-8">
                   <div>
-                    <h3 className="text-lg font-bold mb-3 text-blue-400 border-b border-blue-500/30 pb-1 flex justify-between items-end">
+                    <h3 className="text-xl font-bold mb-4 text-blue-400 border-b border-blue-500/30 pb-2 flex justify-between items-end">
                       {t.team1}
-                      <span className="text-xs font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 1').length} {t.playerCount}</span>
+                      <span className="text-sm font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 1').length} {t.playerCount}</span>
                     </h3>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       {players.map((p, i) => p.fixedTeam === 'Team 1' && renderPlayerRow(p, i))}
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold mb-3 text-val-red border-b border-val-red/30 pb-1 flex justify-between items-end">
+                    <h3 className="text-xl font-bold mb-4 text-val-red border-b border-val-red/30 pb-2 flex justify-between items-end">
                       {t.team2}
-                      <span className="text-xs font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 2').length} {t.playerCount}</span>
+                      <span className="text-sm font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 2').length} {t.playerCount}</span>
                     </h3>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       {players.map((p, i) => p.fixedTeam === 'Team 2' && renderPlayerRow(p, i))}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">
                   {players.map((p, i) => renderPlayerRow(p, i))}
                 </div>
               )}
             </section>
 
-            <section className="bg-val-dark p-4 border border-val-gray/20 rounded shadow-md overflow-visible">
-              <h2 className="text-sm md:text-base font-bold mb-3 uppercase italic text-val-gray flex items-center gap-2">
-                <Ban className="w-4 h-4" /> Quick Bans & Weights
+            <section className="bg-val-dark p-4 md:p-6 border border-val-gray/20 rounded shadow-md overflow-visible">
+              <h2 className="text-base md:text-lg font-bold mb-4 uppercase italic text-val-gray flex items-center gap-2">
+                <Ban className="w-5 h-5" /> Quick Bans & Weights
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
                 <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
                 <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
@@ -717,19 +723,19 @@ const App: React.FC = () => {
 
         {screen === 'advanced' && (
           <div className="animate-slide-up overflow-y-auto pb-10">
-            <h2 className="text-xl md:text-2xl font-bold mb-6 uppercase italic flex items-center gap-2 text-val-red">
-              <SlidersHorizontal className="w-6 h-6" /> {t.advancedSettings}
+            <h2 className="text-2xl md:text-3xl font-bold mb-8 uppercase italic flex items-center gap-3 text-val-red">
+              <SlidersHorizontal className="w-8 h-8" /> {t.advancedSettings}
             </h2>
 
-            <div className="bg-black/30 p-4 border-l-4 border-val-gray group mb-4 shadow-xl flex items-center justify-between">
-              <span className="font-bold text-sm md:text-lg">{t.maxRankDifference}</span>
-              <div className="flex items-center bg-black/40 px-2 py-1 rounded border border-val-gray/30 focus-within:border-val-red">
+            <div className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl flex items-center justify-between">
+              <span className="font-bold text-base md:text-xl">{t.maxRankDifference}</span>
+              <div className="flex items-center bg-black/40 px-3 py-1.5 rounded border border-val-gray/30 focus-within:border-val-red">
                 <input
                   type="number"
                   min="0"
                   value={advanced.maxRankWeightDifference}
                   onChange={(e) => setAdvanced(prev => ({ ...prev, maxRankWeightDifference: Number(e.target.value) }))}
-                  className="bg-transparent text-val-light text-sm w-12 text-center outline-none appearance-none [-moz-appearance:textfield]"
+                  className="bg-transparent text-val-light text-base md:text-lg w-16 text-center outline-none appearance-none [-moz-appearance:textfield]"
                 />
               </div>
             </div>
@@ -738,15 +744,15 @@ const App: React.FC = () => {
             {renderAdvancedSection(t.agentSettings, AGENTS, 'bannedAgents', 'agentWeights', 'agents')}
             {renderAdvancedSection(t.weaponSettings, [...MAIN_WEAPONS, ...SUB_WEAPONS], 'bannedWeapons', 'weaponWeights', 'weapons')}
             
-            <details className="bg-black/30 p-4 border-l-4 border-val-gray group mb-4 shadow-xl">
-              <summary className="font-bold text-lg cursor-pointer flex justify-between items-center outline-none">
+            <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl">
+              <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
                 {t.weaponCombinations}
                 <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
               </summary>
-              <div className="mt-4 flex flex-col gap-6">
+              <div className="mt-6 flex flex-col gap-8">
                 <div>
-                  <div className="text-sm font-bold text-val-gray mb-3">{t.selectMainWeapon}</div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 md:gap-3">
+                  <div className="text-base font-bold text-val-gray mb-4">{t.selectMainWeapon}</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                     {MAIN_WEAPONS.map(mw => {
                       const isSelected = selectedComboMain === mw;
                       const isBanned = advanced.bannedWeapons.includes(mw);
@@ -772,17 +778,17 @@ const App: React.FC = () => {
                           <img 
                             src={getImagePath('weapons', mw)} 
                             alt={mw} 
-                            className={`w-full h-full object-contain p-1 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
+                            className={`w-full h-full object-contain p-1.5 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
                             onError={(e) => e.currentTarget.style.display = 'none'}
                           />
                           {isBanned && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
-                              <Ban className="w-4 h-4 md:w-5 md:h-5 text-val-red drop-shadow-md mb-0.5" />
-                              <span className="text-[7px] md:text-[8px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                              <Ban className="w-5 h-5 md:w-6 md:h-6 text-val-red drop-shadow-md mb-0.5" />
+                              <span className="text-[8px] md:text-[10px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
                             </div>
                           )}
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-0.5 pt-3 pointer-events-none text-center z-20">
-                            <div className={`font-bold text-[8px] md:text-[10px] truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center z-20">
+                            <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
                               {mw}
                             </div>
                           </div>
@@ -792,8 +798,8 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-val-gray mb-3">{t.allowedSubWeapons}</div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  <div className="text-base font-bold text-val-gray mb-4">{t.allowedSubWeapons}</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                     {SUB_WEAPONS.map(sw => {
                       const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
                       const isBanned = advanced.bannedWeapons.includes(sw);
@@ -820,21 +826,21 @@ const App: React.FC = () => {
                           }}
                           className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isAllowed && !isBanned ? 'border-val-red bg-val-dark shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 bg-black/80'}`}
                         >
-                          <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-1 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
+                          <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-1.5 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
                           
                           {isBanned ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
-                              <Ban className="w-4 h-4 md:w-5 md:h-5 text-val-red drop-shadow-md mb-0.5" />
-                              <span className="text-[7px] md:text-[8px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                              <Ban className="w-5 h-5 md:w-6 md:h-6 text-val-red drop-shadow-md mb-0.5" />
+                              <span className="text-[8px] md:text-[10px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
                             </div>
                           ) : !isAllowed && (
                             <div className="absolute inset-0 flex items-center justify-center bg-red-900/30 z-10">
-                              <Ban className="w-5 h-5 md:w-6 md:h-6 text-val-red drop-shadow-md" />
+                              <Ban className="w-6 h-6 md:w-8 md:h-8 text-val-red drop-shadow-md" />
                             </div>
                           )}
 
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-0.5 pt-3 pointer-events-none text-center z-20">
-                            <div className={`font-bold text-[8px] md:text-[9px] truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center z-20">
+                            <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
                                 {sw}
                             </div>
                           </div>
@@ -849,9 +855,9 @@ const App: React.FC = () => {
         )}
 
         {screen === 'result' && result && (
-          <div className="flex flex-col gap-2 md:gap-3 animate-slide-up flex-1 relative min-h-0">
+          <div className="flex flex-col gap-3 md:gap-4 animate-slide-up flex-1 relative min-h-0">
             {result.map && (
-              <div className="relative w-full h-20 md:h-32 shrink-0 rounded overflow-hidden border border-val-gray/30 shadow-lg bg-val-dark">
+              <div className="relative w-full h-24 md:h-40 shrink-0 rounded overflow-hidden border border-val-gray/30 shadow-lg bg-val-dark">
                 <img 
                   src={getImagePath('maps', result.map)} 
                   alt={result.map} 
@@ -859,52 +865,52 @@ const App: React.FC = () => {
                   onError={(e) => e.currentTarget.style.display = 'none'}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-val-dark via-val-dark/70 to-transparent pointer-events-none"></div>
-                <div className="absolute inset-y-0 left-0 flex flex-col justify-center p-3 md:p-6 pointer-events-none">
-                  <span className="text-[9px] md:text-xs text-val-gray font-bold uppercase tracking-widest mb-0.5 md:mb-1">{t.map}</span>
-                  <span className="text-xl md:text-4xl text-white font-bold uppercase tracking-tighter italic drop-shadow-md">{result.map}</span>
+                <div className="absolute inset-y-0 left-0 flex flex-col justify-center p-4 md:p-8 pointer-events-none">
+                  <span className="text-[10px] md:text-sm text-val-gray font-bold uppercase tracking-widest mb-1">{t.map}</span>
+                  <span className="text-2xl md:text-5xl text-white font-bold uppercase tracking-tighter italic drop-shadow-md">{result.map}</span>
                 </div>
               </div>
             )}
 
-            <div className="flex-1 flex flex-col relative min-h-0 gap-2 md:gap-3">
-              <div className="flex-1 bg-blue-900/10 border-t-2 border-blue-500 p-2 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Shield className="w-64 h-64" /></div>
-                <div className="flex items-center gap-3 mb-1.5 relative z-10 pl-1 shrink-0">
-                  <h2 className="text-lg md:text-xl font-bold uppercase italic tracking-tighter text-blue-400 flex items-center gap-2">
+            <div className="flex-1 flex flex-col relative min-h-0 gap-3 md:gap-4">
+              <div className="flex-1 bg-blue-900/10 border-t-2 border-blue-500 p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Shield className="w-80 h-80" /></div>
+                <div className="flex items-center gap-4 mb-2 relative z-10 pl-2 shrink-0">
+                  <h2 className="text-xl md:text-2xl font-bold uppercase italic tracking-tighter text-blue-400 flex items-center gap-3">
                     {t.defenders}
-                    {!config.autoTeams && <span className="text-sm font-normal text-val-light opacity-80 tracking-widest">[{defenderTeamName}]</span>}
+                    {!config.autoTeams && <span className="text-base font-normal text-val-light opacity-80 tracking-widest">[{defenderTeamName}]</span>}
                   </h2>
                   {config.useRanks && config.autoTeams && (
-                    <span className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded text-xs md:text-sm border border-blue-500/30">
+                    <span className="bg-blue-900/40 text-blue-300 px-3 py-1 rounded text-sm md:text-base border border-blue-500/30">
                       {t.teamWeight.replace('{weight}', String(defenderWeight))}
                     </span>
                   )}
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500/50 to-transparent"></div>
                 </div>
-                <div className="grid grid-cols-5 gap-1.5 md:gap-2 relative z-10 flex-1 min-h-0">
+                <div className="grid grid-cols-5 gap-2 relative z-10 flex-1 min-h-0">
                   {defenders.map(p => <PlayerCard key={p.id} player={p} isDefender={true} />)}
                 </div>
               </div>
 
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none flex flex-col items-center gap-1">
-                <div className="bg-val-dark px-4 py-1 border-2 border-val-red text-val-red font-bold text-base md:text-lg italic shadow-2xl skew-x-[-10deg]"><div className="skew-x-[10deg]">VS</div></div>
+                <div className="bg-val-dark px-5 py-2 border-2 border-val-red text-val-red font-bold text-xl md:text-2xl italic shadow-2xl skew-x-[-10deg]"><div className="skew-x-[10deg]">VS</div></div>
               </div>
 
-              <div className="flex-1 bg-red-900/10 border-t-2 border-val-red p-2 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Swords className="w-64 h-64" /></div>
-                <div className="flex items-center gap-3 mb-1.5 relative z-10 pl-1 shrink-0">
-                  <h2 className="text-lg md:text-xl font-bold uppercase italic tracking-tighter text-val-red flex items-center gap-2">
+              <div className="flex-1 bg-red-900/10 border-t-2 border-val-red p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Swords className="w-80 h-80" /></div>
+                <div className="flex items-center gap-4 mb-2 relative z-10 pl-2 shrink-0">
+                  <h2 className="text-xl md:text-2xl font-bold uppercase italic tracking-tighter text-val-red flex items-center gap-3">
                     {t.attackers}
-                    {!config.autoTeams && <span className="text-sm font-normal text-val-light opacity-80 tracking-widest">[{attackerTeamName}]</span>}
+                    {!config.autoTeams && <span className="text-base font-normal text-val-light opacity-80 tracking-widest">[{attackerTeamName}]</span>}
                   </h2>
                   {config.useRanks && config.autoTeams && (
-                    <span className="bg-red-900/40 text-val-red px-2 py-0.5 rounded text-xs md:text-sm border border-val-red/30">
+                    <span className="bg-red-900/40 text-val-red px-3 py-1 rounded text-sm md:text-base border border-val-red/30">
                       {t.teamWeight.replace('{weight}', String(attackerWeight))}
                     </span>
                   )}
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-val-red/50 to-transparent"></div>
                 </div>
-                <div className="grid grid-cols-5 gap-1.5 md:gap-2 relative z-10 flex-1 min-h-0">
+                <div className="grid grid-cols-5 gap-2 relative z-10 flex-1 min-h-0">
                   {attackers.map(p => <PlayerCard key={p.id} player={p} isDefender={false} />)}
                 </div>
               </div>
