@@ -322,7 +322,6 @@ const App: React.FC = () => {
     const activePlayers = players.filter(p => p.name.trim() !== '');
     if (activePlayers.length === 0) return;
     
-    // なぜ: エージェント重複OFFかつエージェント制限ONの場合、最低5体のエージェントが必要なため事前検証する
     if (config.restrictAgents) {
       const validationResult = validateTeamCreation(
         AGENTS.length,
@@ -395,6 +394,24 @@ const App: React.FC = () => {
       [dictKey]: { ...prev[dictKey], [item]: weight }
     }));
   };
+
+  // なぜ: トグルUIを簡潔に描画するためのヘルパー関数
+  const renderToggle = (key: keyof RandomizerConfig, label: string, disabled: boolean = false) => (
+    <label key={key} className={`flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/50'}`}>
+      <div className="relative pointer-events-none shrink-0">
+        <input 
+          type="checkbox" 
+          className="sr-only" 
+          checked={config[key]}
+          onChange={() => !disabled && toggleConfig(key)}
+          disabled={disabled}
+        />
+        <div className={`w-8 h-4 rounded-full transition-colors ${config[key] && !disabled ? 'bg-val-red' : 'bg-val-gray'}`}></div>
+        <div className={`absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform ${config[key] && !disabled ? 'translate-x-4' : ''}`}></div>
+      </div>
+      <span className="uppercase text-xs md:text-sm tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label}</span>
+    </label>
+  );
 
   const renderPlayerRow = (player: Player, index: number) => (
     <div key={player.id} className="bg-black/40 p-2 border border-val-gray/20 focus-within:border-val-red transition-colors flex items-center gap-2 md:gap-3">
@@ -596,7 +613,7 @@ const App: React.FC = () => {
         {screen === 'setup' && (
           <div className="space-y-4 md:space-y-6 animate-slide-up overflow-y-auto pb-10">
             <section className="bg-val-blue border-l-4 border-val-red p-4 md:p-5">
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg md:text-xl font-bold uppercase italic flex items-center gap-2">
                   <Settings2 className="text-val-red w-5 h-5" /> {t.rules}
                 </h2>
@@ -607,34 +624,34 @@ const App: React.FC = () => {
                   <SlidersHorizontal className="w-4 h-4 text-val-red" /> {t.advancedSettings}
                 </button>
               </div>
-              <div className="flex flex-wrap gap-3 md:gap-4">
-                {Object.entries({
-                  autoTeams: t.autoTeams,
-                  useRanks: t.useRanks,
-                  restrictWeapons: t.restrictWeapons,
-                  restrictWeaponCombinations: t.restrictWeaponCombinations,
-                  restrictAgents: t.restrictAgents,
-                  restrictRoles: t.restrictRoles,
-                  allowDuplicateAgents: t.allowDuplicateAgents
-                }).map(([key, label]) => {
-                  const isDisabled = (key === 'useRanks' && !config.autoTeams) || (key === 'restrictWeaponCombinations' && !config.restrictWeapons) || (key === 'allowDuplicateAgents' && !config.restrictAgents);
-                  return (
-                    <label key={key} className={`flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/50'}`}>
-                      <div className="relative pointer-events-none">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only" 
-                          checked={config[key as keyof RandomizerConfig]}
-                          onChange={() => !isDisabled && toggleConfig(key as keyof RandomizerConfig)}
-                          disabled={isDisabled}
-                        />
-                        <div className={`w-8 h-4 rounded-full transition-colors ${config[key as keyof RandomizerConfig] && !isDisabled ? 'bg-val-red' : 'bg-val-gray'}`}></div>
-                        <div className={`absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform ${config[key as keyof RandomizerConfig] && !isDisabled ? 'translate-x-4' : ''}`}></div>
-                      </div>
-                      <span className="uppercase text-xs md:text-sm tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label as string}</span>
-                    </label>
-                  );
-                })}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
+                  <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryTeam}</h3>
+                  {renderToggle('autoTeams', t.autoTeams)}
+                  {renderToggle('useRanks', t.useRanks, !config.autoTeams)}
+                </div>
+
+                <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
+                  <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryAgent}</h3>
+                  {renderToggle('restrictAgents', t.restrictAgents)}
+                  {config.restrictAgents && (
+                    <div className="pl-4 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-2">
+                      {renderToggle('allowDuplicateAgents', t.allowDuplicateAgents)}
+                    </div>
+                  )}
+                  {renderToggle('restrictRoles', t.restrictRoles)}
+                </div>
+
+                <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
+                  <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryWeapon}</h3>
+                  {renderToggle('restrictWeapons', t.restrictWeapons)}
+                  {config.restrictWeapons && (
+                    <div className="pl-4 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-2">
+                      {renderToggle('restrictWeaponCombinations', t.restrictWeaponCombinations)}
+                    </div>
+                  )}
+                </div>
               </div>
             </section>
 

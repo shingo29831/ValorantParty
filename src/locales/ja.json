@@ -1,6 +1,9 @@
 {
   "title": "Valorant Custom",
   "rules": "ルール設定",
+  "categoryTeam": "チーム",
+  "categoryAgent": "エージェント",
+  "categoryWeapon": "武器",
   "players": "プレイヤー (10人)",
   "autoTeams": "自動チーム分け",
   "useRanks": "ランク均等化",
@@ -8,7 +11,7 @@
   "restrictWeaponCombinations": "武器組み合わせ制限",
   "restrictAgents": "ランダムエージェント",
   "restrictRoles": "ランダムロール",
-  "allowDuplicateAgents": "エージェント重複許可",
+  "allowDuplicateAgents": "重複可",
   "generate": "チーム作成",
   "reroll": "再生成",
   "team1": "チーム 1",

@@ -1,6 +1,9 @@
 {
   "title": "Valorant Custom",
   "rules": "Rules",
+  "categoryTeam": "Team",
+  "categoryAgent": "Agent",
+  "categoryWeapon": "Weapon",
   "players": "Players (10)",
   "autoTeams": "Auto Teams",
   "useRanks": "Rank Balancing",
@@ -8,7 +11,7 @@
   "restrictWeaponCombinations": "Weapon Combos",
   "restrictAgents": "Random Agents",
   "restrictRoles": "Random Roles",
-  "allowDuplicateAgents": "Allow Duplicate Agents",
+  "allowDuplicateAgents": "Allow Duplicates",
   "generate": "Generate",
   "reroll": "Re-roll",
   "team1": "Team 1",
