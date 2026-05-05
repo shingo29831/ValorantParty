@@ -77,8 +77,12 @@ const AdvancedItemCard: React.FC<{
           </div>
         )}
 
+        {/* なぜ: アイテム名と確率をセットにしてカード下部に表示するため */}
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-1 pt-4 pointer-events-none">
-          <div className={`font-bold text-[9px] md:text-[10px] lg:text-xs truncate text-center drop-shadow-md ${isBanned ? 'text-val-gray' : 'text-white'}`} title={item}>{item}</div>
+          <div className={`font-bold text-[9px] md:text-[10px] lg:text-xs truncate text-center drop-shadow-md flex items-center justify-center gap-1 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`} title={item}>
+            <span>{item}</span>
+            {!isBanned && <span className="text-[7px] md:text-[8px] font-mono text-val-light/80">{probability}%</span>}
+          </div>
         </div>
       </div>
       
@@ -89,10 +93,7 @@ const AdvancedItemCard: React.FC<{
         <Ban className="w-2.5 h-2.5 md:w-3 md:h-3" /> {isBanned ? 'BANNED' : t.ban}
       </button>
       <div className="flex items-center justify-between gap-1 mt-auto px-1">
-        <div className="flex flex-col items-start gap-0.5">
-          <span className="text-[7px] md:text-[8px] text-val-gray uppercase leading-none">{t.weight}</span>
-          <span className={`text-[9px] md:text-[10px] font-mono leading-none ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>{probability}%</span>
-        </div>
+        <span className="text-[8px] md:text-[9px] text-val-gray shrink-0">{t.weight}:</span>
         <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} />
       </div>
     </div>
@@ -107,8 +108,7 @@ const QuickBanCarousel: React.FC<{
   weights: Record<string, number>;
   onToggle: (item: string) => void;
   onUpdateWeight: (item: string, weight: number) => void;
-  t: Record<string, string>;
-}> = ({ title, items, category, bannedList, weights, onToggle, onUpdateWeight, t }) => {
+}> = ({ title, items, category, bannedList, weights, onToggle, onUpdateWeight }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -177,15 +177,16 @@ const QuickBanCarousel: React.FC<{
                     </div>
                   )}
                   
+                  {/* なぜ: アイテム名と確率をセットにしてカード下部に表示するため */}
                   <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center">
-                    <div className={`font-bold text-[9px] md:text-[11px] truncate drop-shadow-md ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
-                      {item}
+                    <div className={`font-bold text-[9px] md:text-[11px] truncate drop-shadow-md flex items-center justify-center gap-1 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
+                      <span>{item}</span>
+                      {!isBanned && <span className="text-[7px] md:text-[8px] font-mono text-val-light/80">{probability}%</span>}
                     </div>
                   </div>
                 </button>
 
-                <div className="flex items-center justify-between px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1">
-                  <span className={`text-[9px] md:text-[10px] font-mono ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>{probability}%</span>
+                <div className="flex items-center justify-center px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative">
                   <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} />
                 </div>
               </div>
@@ -703,9 +704,9 @@ const App: React.FC = () => {
                 <Ban className="w-4 h-4" /> Quick Bans & Weights
               </h2>
               <div className="space-y-4">
-                <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
-                <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
-                <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} />
+                <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} />
+                <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} />
               </div>
             </section>
           </div>
