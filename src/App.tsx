@@ -4,6 +4,7 @@
 
 import React, { useState, useRef } from 'react';
 import { generateMatch, getRankWeight } from './logic/randomizer';
+import { validateTeamCreation } from './logic/validator';
 import { Player, PlayerResult, RandomizerConfig, AdvancedConfig, Rank, Tier, Role, Team, MatchResult } from './types';
 import { RANKS, ROLES, MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS, AGENT_ROLES } from './constants/valorant';
 import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -296,6 +297,7 @@ const App: React.FC = () => {
     restrictWeaponCombinations: false,
     restrictAgents: false,
     restrictRoles: false,
+    allowDuplicateAgents: false,
   });
 
   const [advanced, setAdvanced] = useState<AdvancedConfig>({
@@ -320,6 +322,20 @@ const App: React.FC = () => {
     const activePlayers = players.filter(p => p.name.trim() !== '');
     if (activePlayers.length === 0) return;
     
+    // なぜ: エージェント重複OFFかつエージェント制限ONの場合、最低5体のエージェントが必要なため事前検証する
+    if (config.restrictAgents) {
+      const validationResult = validateTeamCreation(
+        AGENTS.length,
+        advanced.bannedAgents.length,
+        config.allowDuplicateAgents
+      );
+
+      if (!validationResult.isValid && validationResult.errorMessageKey) {
+        alert(t[validationResult.errorMessageKey]);
+        return;
+      }
+    }
+
     setResult(generateMatch(activePlayers, config, advanced));
     setScreen('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -598,9 +614,10 @@ const App: React.FC = () => {
                   restrictWeapons: t.restrictWeapons,
                   restrictWeaponCombinations: t.restrictWeaponCombinations,
                   restrictAgents: t.restrictAgents,
-                  restrictRoles: t.restrictRoles
+                  restrictRoles: t.restrictRoles,
+                  allowDuplicateAgents: t.allowDuplicateAgents
                 }).map(([key, label]) => {
-                  const isDisabled = (key === 'useRanks' && !config.autoTeams) || (key === 'restrictWeaponCombinations' && !config.restrictWeapons);
+                  const isDisabled = (key === 'useRanks' && !config.autoTeams) || (key === 'restrictWeaponCombinations' && !config.restrictWeapons) || (key === 'allowDuplicateAgents' && !config.restrictAgents);
                   return (
                     <label key={key} className={`flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/50'}`}>
                       <div className="relative pointer-events-none">

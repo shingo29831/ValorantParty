@@ -8,6 +8,7 @@
   "restrictWeaponCombinations": "武器組み合わせ制限",
   "restrictAgents": "ランダムエージェント",
   "restrictRoles": "ランダムロール",
+  "allowDuplicateAgents": "エージェント重複許可",
   "generate": "チーム作成",
   "reroll": "再生成",
   "team1": "チーム 1",
@@ -34,5 +35,6 @@
   "unbanConfirm": "{weapon} はBANされています。\nBANを解除して許可しますか？",
   "maxRankDifference": "ランクバランス許容重み差",
   "teamWeight": "総重み: {weight}",
-  "totalWeight": "総重み: {weight}"
+  "totalWeight": "総重み: {weight}",
+  "notEnoughAgentsWarning": "エージェント重複がOFFの場合、最低でも5体のエージェントを有効（BAN解除）にする必要があります。"
 }

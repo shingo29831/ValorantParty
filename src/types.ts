@@ -1,6 +1,6 @@
 // src/types.ts
 // AI Role: 型定義の提供
-// 役割: ランクバランス許容差の型を追加
+// 役割: アプリケーション全体で利用するデータ構造の定義。RandomizerConfigにallowDuplicateAgentsを追加
 
 export type Team = 'Team 1' | 'Team 2';
 export type Side = 'Attacker' | 'Defender';
@@ -33,6 +33,7 @@ export interface RandomizerConfig {
   restrictWeaponCombinations: boolean;
   restrictAgents: boolean;
   restrictRoles: boolean;
+  allowDuplicateAgents: boolean;
 }
 
 export interface AdvancedConfig {
@@ -43,7 +44,7 @@ export interface AdvancedConfig {
   weaponWeights: Record<string, number>;
   agentWeights: Record<string, number>;
   weaponCombinations: Record<string, string[]>;
-  maxRankWeightDifference: number; // 追加: 許容する重み差
+  maxRankWeightDifference: number;
 }
 
 export interface MatchResult {

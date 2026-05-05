@@ -1,6 +1,6 @@
 // src/logic/randomizer.ts
 // AI Role: コアロジックの提供
-// 役割: アイテム抽選のデフォルト重みを10に変更。また、チーム内でのエージェント重複を防止する。
+// 役割: アイテム抽選のデフォルト重みを10に変更。また、チーム内でのエージェント重複を防止する設定を追加。
 
 import { Player, PlayerResult, RandomizerConfig, AdvancedConfig, Rank, Tier, Team, Side, MatchResult } from '../types';
 import { MAIN_WEAPONS, SUB_WEAPONS, AGENTS, ROLES, AGENT_ROLES, MAPS } from '../constants/valorant';
@@ -95,11 +95,9 @@ export const generateMatch = (players: Player[], config: RandomizerConfig, advan
 
   const selectedMap = getWeightedRandomItem(MAPS, advanced.bannedMaps, advanced.mapWeights);
 
-  // チームごとの使用済みエージェントを記録するSet
   const team1UsedAgents = new Set<string>();
   const team2UsedAgents = new Set<string>();
 
-  // usedAgents 引数を追加し、割り当て済みのエージェントを追跡・除外する
   const mapToResult = (p: Player, team: Team, side: Side, usedAgents: Set<string>): PlayerResult => {
     const res: PlayerResult = { ...p, assignedTeam: team, assignedSide: side };
 
@@ -110,19 +108,18 @@ export const generateMatch = (players: Player[], config: RandomizerConfig, advan
     }
 
     if (config.restrictAgents) {
-      // 指定されたロールを持ち、かつ「まだこのチームで選ばれていない(usedAgentsにない)」エージェントに絞り込む
-      const roleAgents = AGENTS.filter(a => AGENT_ROLES[a] === res.role && !usedAgents.has(a));
+      const roleAgents = AGENTS.filter(a => AGENT_ROLES[a] === res.role && (config.allowDuplicateAgents || !usedAgents.has(a)));
       res.agent = getWeightedRandomItem(roleAgents, advanced.bannedAgents, advanced.agentWeights);
       
       if (!res.agent) {
-        // ロール縛りで枯渇した場合は、ロールを無視して「まだ選ばれていない」エージェントから選択
-        const availableAgents = AGENTS.filter(a => !usedAgents.has(a));
+        const availableAgents = AGENTS.filter(a => config.allowDuplicateAgents || !usedAgents.has(a));
         res.agent = getWeightedRandomItem(availableAgents, advanced.bannedAgents, advanced.agentWeights);
       }
 
       if (res.agent) {
-        // 選択されたエージェントを使用済みとして登録する
-        usedAgents.add(res.agent);
+        if (!config.allowDuplicateAgents) {
+          usedAgents.add(res.agent);
+        }
         if (AGENT_ROLES[res.agent]) {
           res.role = AGENT_ROLES[res.agent];
         }
@@ -152,7 +149,6 @@ export const generateMatch = (players: Player[], config: RandomizerConfig, advan
     map: selectedMap,
     team1Side,
     team2Side,
-    // プレイヤーのマッピング時にチームの usedAgents を渡す
     team1: team1.map(p => mapToResult(p, 'Team 1', team1Side, team1UsedAgents)),
     team2: team2.map(p => mapToResult(p, 'Team 2', team2Side, team2UsedAgents)),
   };
