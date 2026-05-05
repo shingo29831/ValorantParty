@@ -2,14 +2,13 @@
 // AI Role: メインUIの提供
 // 役割: App.tsxの肥大化を防ぐため、RoleIconとWeightControllerを別ファイルへ分割
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { generateMatch, getRankWeight } from './logic/randomizer';
 import { validateTeamCreation } from './logic/validator';
 import { Player, PlayerResult, RandomizerConfig, AdvancedConfig, Rank, Tier, Role, Team, MatchResult } from './types';
 import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { RANKS, ROLES, MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS, AGENT_ROLES } from './constants/valorant';
 import { RoleIcon } from './components/RoleIcon';
-import { WeightController } from './components/WeightController';
 
 import jaTranslation from './locales/ja.json';
 import enTranslation from './locales/en.json';
@@ -39,7 +38,8 @@ const getRankImagePath = (rank: Rank, tier: Tier) => {
   return `/images/ranks/${rank}_${tier}_Rank.png`;
 };
 
-const AdvancedItemCard: React.FC<{
+// なぜ: 詳細設定画面と初期画面のカードUIを共通化し、重み変更時の一時表示アニメーションを追加するため
+const ItemCard: React.FC<{
   item: string;
   category: 'maps' | 'weapons' | 'agents';
   isBanned: boolean;
@@ -48,52 +48,90 @@ const AdvancedItemCard: React.FC<{
   onToggleBan: () => void;
   onUpdateWeight: (weight: number) => void;
   t: Record<string, string>;
-}> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t }) => {
+  className?: string;
+}> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t, className = "" }) => {
   const [imgError, setImgError] = useState(false);
-  const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
-  const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
-  
+  const [showWeightOverlay, setShowWeightOverlay] = useState(false);
+  const [prevWeight, setPrevWeight] = useState(currentWeight);
+
+  useEffect(() => {
+    if (currentWeight !== prevWeight) {
+      setShowWeightOverlay(true);
+      setPrevWeight(currentWeight);
+      const timer = setTimeout(() => {
+        setShowWeightOverlay(false);
+      }, 600); // 変更後0.6秒間保持し、その後CSS transitionでフェードアウト
+      return () => clearTimeout(timer);
+    }
+  }, [currentWeight, prevWeight]);
+
   const probability = (!isBanned && totalActiveWeight > 0) 
     ? ((currentWeight / totalActiveWeight) * 100).toFixed(1) 
     : "0.0";
-  
+    
+  const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
+  const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
+
   return (
-    <div className={`flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 rounded border transition-colors ${isBanned ? 'bg-red-900/20 border-val-red/50 opacity-60 hover:opacity-100' : 'bg-val-dark border-val-gray/20 hover:border-val-gray/50'}`}>
-      <div className={`w-full ${aspectClass} ${bgClass} rounded-sm overflow-hidden relative flex items-center justify-center group cursor-pointer`} onClick={onToggleBan}>
+    <div className={`flex flex-col gap-1.5 md:gap-2 ${className}`}>
+      <button
+        onClick={onToggleBan}
+        className={`relative w-full rounded overflow-hidden border-2 transition-all group ${isBanned ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 hover:border-val-gray/60'} ${aspectClass} ${bgClass}`}
+        title={`${item} (${isBanned ? 'Banned' : 'Active'})`}
+      >
         {!imgError ? (
-          <img 
-            src={getImagePath(category, item)} 
-            alt={item} 
-            className={`w-full h-full transition-transform duration-300 group-hover:scale-110 ${category === 'weapons' ? 'object-contain p-1' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100'}`} 
-            onError={() => setImgError(true)} 
+          <img
+            src={getImagePath(category, item)}
+            alt={item}
+            className={`w-full h-full transition-transform duration-300 ${category === 'weapons' ? 'object-contain p-1' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100 group-hover:scale-110'}`}
+            onError={() => setImgError(true)}
           />
         ) : (
-          <span className={`text-val-gray text-[10px] md:text-xs font-bold uppercase break-all px-1 text-center ${isBanned ? 'opacity-40' : ''}`}>{item}</span>
+          <div className="flex items-center justify-center w-full h-full text-center p-1">
+            <span className={`text-[8px] md:text-[10px] font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
+          </div>
         )}
         
         {isBanned && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-900/20">
-            <Ban className="w-8 h-8 text-val-red drop-shadow-md" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/30 z-10">
+            <Ban className="w-6 h-6 md:w-8 md:h-8 text-val-red drop-shadow-md mb-0.5" />
+            <span className="text-[7px] md:text-[8px] text-white font-bold leading-tight px-1 whitespace-nowrap">BANNED</span>
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-1.5 pt-6 pointer-events-none">
-          <div className={`font-bold text-[10px] md:text-[11px] lg:text-xs truncate text-center drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`} title={item}>
+        {/* 重み変更時の一時表示オーバーレイ */}
+        <div className={`absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-20 pointer-events-none transition-opacity duration-1000 ${showWeightOverlay && !isBanned ? 'opacity-100' : 'opacity-0'}`}>
+          <span className="text-val-gray text-[9px] md:text-xs uppercase font-bold tracking-widest">{t.weight}</span>
+          <span className="text-4xl md:text-5xl text-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{currentWeight}</span>
+        </div>
+        
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1.5 pt-6 pointer-events-none text-center z-10">
+          <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
             <span>{item}</span>
-            {!isBanned && <span className="text-[10px] md:text-[11px] lg:text-xs font-mono text-val-light">{probability}%</span>}
           </div>
         </div>
-      </div>
-      
-      <button 
-        onClick={onToggleBan}
-        className={`text-[9px] md:text-[10px] px-1 py-1 rounded font-bold flex items-center justify-center gap-1 transition-colors ${isBanned ? 'bg-val-red text-white' : 'bg-val-gray/30 hover:bg-val-gray/50 text-val-light'}`}
-      >
-        <Ban className="w-2.5 h-2.5 md:w-3 md:h-3" /> {isBanned ? 'BANNED' : t.ban}
       </button>
-      <div className="flex items-center justify-between gap-1 mt-auto px-1">
-        <span className="text-[8px] md:text-[9px] text-val-gray shrink-0">{t.weight}:</span>
-        <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} />
+
+      <div className="flex items-center justify-between px-1 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1 mt-auto">
+        {!isBanned ? (
+          <button onClick={() => onUpdateWeight(Math.max(0, currentWeight - 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Decrease Weight">
+            <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
+        ) : (
+          <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
+        )}
+        
+        <span className={`text-sm md:text-base font-mono font-bold text-center flex-1 ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
+          {probability}%
+        </span>
+
+        {!isBanned ? (
+          <button onClick={() => onUpdateWeight(Math.max(0, currentWeight + 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Increase Weight">
+            <ChevronUp className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
+        ) : (
+          <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
+        )}
       </div>
     </div>
   );
@@ -107,7 +145,8 @@ const QuickBanCarousel: React.FC<{
   weights: Record<string, number>;
   onToggle: (item: string) => void;
   onUpdateWeight: (item: string, weight: number) => void;
-}> = ({ title, items, category, bannedList, weights, onToggle, onUpdateWeight }) => {
+  t: Record<string, string>;
+}> = ({ title, items, category, bannedList, weights, onToggle, onUpdateWeight, t }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -121,10 +160,7 @@ const QuickBanCarousel: React.FC<{
     }
   };
 
-  const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
   const widthClass = category === 'agents' ? 'w-20 md:w-28' : 'w-28 md:w-44';
-  const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
-
   const activeWeight = items.reduce((sum, item) => bannedList.includes(item) ? sum : sum + (weights[item] ?? 10), 0);
   
   return (
@@ -144,67 +180,19 @@ const QuickBanCarousel: React.FC<{
           {items.map(item => {
             const isBanned = bannedList.includes(item);
             const currentWeight = weights[item] ?? 10;
-            const [imgError, setImgError] = useState(false);
-            
-            const probability = (!isBanned && activeWeight > 0) 
-              ? ((currentWeight / activeWeight) * 100).toFixed(1) 
-              : "0.0";
-            
             return (
-              <div key={item} className={`shrink-0 snap-start flex flex-col gap-2 ${widthClass} relative`}>
-                <button
-                  onClick={() => onToggle(item)}
-                  className={`relative w-full rounded overflow-hidden border-2 transition-all ${isBanned ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 hover:border-val-gray/60'} ${aspectClass} ${bgClass}`}
-                  title={`${item} (${isBanned ? 'Banned' : 'Active'})`}
-                >
-                  {!imgError ? (
-                    <img
-                      src={getImagePath(category, item)}
-                      alt={item}
-                      className={`w-full h-full transition-transform ${category === 'weapons' ? 'object-contain p-1' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100'}`}
-                      onError={() => setImgError(true)}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-center p-1">
-                      <span className={`text-[8px] md:text-[10px] font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
-                    </div>
-                  )}
-                  
-                  {isBanned && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-red-900/30">
-                      <Ban className="w-6 h-6 md:w-8 md:h-8 text-val-red drop-shadow-md" />
-                    </div>
-                  )}
-                  
-                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1.5 pt-6 pointer-events-none text-center">
-                    <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
-                      <span>{item}</span>
-                    </div>
-                  </div>
-                </button>
-
-                <div className="flex items-center justify-between px-1 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1 mt-auto">
-                  {!isBanned ? (
-                    <button onClick={() => onUpdateWeight(item, Math.max(0, currentWeight - 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Decrease Weight">
-                      <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  ) : (
-                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
-                  )}
-                  
-                  <span className={`text-sm md:text-base font-mono font-bold text-center flex-1 ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
-                    {probability}%
-                  </span>
-
-                  {!isBanned ? (
-                    <button onClick={() => onUpdateWeight(item, Math.max(0, currentWeight + 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Increase Weight">
-                      <ChevronUp className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  ) : (
-                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
-                  )}
-                </div>
-              </div>
+              <ItemCard
+                key={item}
+                item={item}
+                category={category}
+                isBanned={isBanned}
+                currentWeight={currentWeight}
+                totalActiveWeight={activeWeight}
+                onToggleBan={() => onToggle(item)}
+                onUpdateWeight={(w) => onUpdateWeight(item, w)}
+                t={t}
+                className={`shrink-0 snap-start ${widthClass} relative`}
+              />
             );
           })}
         </div>
@@ -552,7 +540,7 @@ const App: React.FC = () => {
 
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 mt-4 overflow-visible pb-12">
           {displayedItems.map(item => (
-            <AdvancedItemCard 
+            <ItemCard 
               key={item}
               item={item}
               category={category}
@@ -719,9 +707,9 @@ const App: React.FC = () => {
                 <Ban className="w-4 h-4" /> Quick Bans & Weights
               </h2>
               <div className="space-y-4">
-                <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} />
-                <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} />
-                <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} />
+                <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
               </div>
             </section>
           </div>
