@@ -51,24 +51,23 @@ const ItemCard: React.FC<{
 }> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t, className = "" }) => {
   const [imgError, setImgError] = useState(false);
   const [showWeightOverlay, setShowWeightOverlay] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 修正箇所: NodeJS.Timeout の代わりに ReturnType を使用
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // なぜ: 初回マウント時にアニメーションが発火するのを防ぐため
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
-    // 重みが変更されたら即座にオーバーレイを表示する
     setShowWeightOverlay(true);
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // 0.5秒間表示を維持したのち、フェードアウトを開始する
     timeoutRef.current = setTimeout(() => {
       setShowWeightOverlay(false);
     }, 500);
