@@ -77,11 +77,10 @@ const AdvancedItemCard: React.FC<{
           </div>
         )}
 
-        {/* なぜ: アイテム名と確率をセットにしてカード下部に表示するため */}
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-1 pt-4 pointer-events-none">
-          <div className={`font-bold text-[9px] md:text-[10px] lg:text-xs truncate text-center drop-shadow-md flex items-center justify-center gap-1 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`} title={item}>
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-1.5 pt-6 pointer-events-none">
+          <div className={`font-bold text-[10px] md:text-[11px] lg:text-xs truncate text-center drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`} title={item}>
             <span>{item}</span>
-            {!isBanned && <span className="text-[7px] md:text-[8px] font-mono text-val-light/80">{probability}%</span>}
+            {!isBanned && <span className="text-[10px] md:text-[11px] lg:text-xs font-mono text-val-light">{probability}%</span>}
           </div>
         </div>
       </div>
@@ -177,11 +176,10 @@ const QuickBanCarousel: React.FC<{
                     </div>
                   )}
                   
-                  {/* なぜ: アイテム名と確率をセットにしてカード下部に表示するため */}
-                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center">
-                    <div className={`font-bold text-[9px] md:text-[11px] truncate drop-shadow-md flex items-center justify-center gap-1 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
+                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1.5 pt-6 pointer-events-none text-center">
+                    <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
                       <span>{item}</span>
-                      {!isBanned && <span className="text-[7px] md:text-[8px] font-mono text-val-light/80">{probability}%</span>}
+                      {!isBanned && <span className="text-[10px] md:text-xs font-mono text-val-light">{probability}%</span>}
                     </div>
                   </div>
                 </button>
