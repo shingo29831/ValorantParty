@@ -6,8 +6,8 @@ import React, { useState, useRef } from 'react';
 import { generateMatch, getRankWeight } from './logic/randomizer';
 import { validateTeamCreation } from './logic/validator';
 import { Player, PlayerResult, RandomizerConfig, AdvancedConfig, Rank, Tier, Role, Team, MatchResult } from './types';
+import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { RANKS, ROLES, MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS, AGENT_ROLES } from './constants/valorant';
-import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RoleIcon } from './components/RoleIcon';
 import { WeightController } from './components/WeightController';
 
@@ -93,7 +93,7 @@ const AdvancedItemCard: React.FC<{
       </button>
       <div className="flex items-center justify-between gap-1 mt-auto px-1">
         <span className="text-[8px] md:text-[9px] text-val-gray shrink-0">{t.weight}:</span>
-        <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} variant="full" />
+        <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} />
       </div>
     </div>
   );
@@ -176,7 +176,6 @@ const QuickBanCarousel: React.FC<{
                     </div>
                   )}
                   
-                  {/* なぜ: 名前の横にあった確率表示を削除し、アイテム名のみ表示する */}
                   <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1.5 pt-6 pointer-events-none text-center">
                     <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
                       <span>{item}</span>
@@ -184,10 +183,26 @@ const QuickBanCarousel: React.FC<{
                   </div>
                 </button>
 
-                {/* なぜ: カード下部のコントローラー横に確率表示を移動し、両端揃えで配置する */}
-                <div className="flex items-center justify-between px-2 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1">
-                  <span className={`text-[10px] md:text-[11px] font-mono font-bold ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>{probability}%</span>
-                  <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} variant="arrows-only" />
+                <div className="flex items-center justify-between px-1 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1 mt-auto">
+                  {!isBanned ? (
+                    <button onClick={() => onUpdateWeight(item, Math.max(0, currentWeight - 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Decrease Weight">
+                      <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  ) : (
+                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
+                  )}
+                  
+                  <span className={`text-sm md:text-base font-mono font-bold text-center flex-1 ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
+                    {probability}%
+                  </span>
+
+                  {!isBanned ? (
+                    <button onClick={() => onUpdateWeight(item, Math.max(0, currentWeight + 1))} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0" title="Increase Weight">
+                      <ChevronUp className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  ) : (
+                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0"></div>
+                  )}
                 </div>
               </div>
             );
