@@ -44,13 +44,18 @@ const AdvancedItemCard: React.FC<{
   category: 'maps' | 'weapons' | 'agents';
   isBanned: boolean;
   currentWeight: number;
+  totalActiveWeight: number;
   onToggleBan: () => void;
   onUpdateWeight: (weight: number) => void;
   t: Record<string, string>;
-}> = ({ item, category, isBanned, currentWeight, onToggleBan, onUpdateWeight, t }) => {
+}> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t }) => {
   const [imgError, setImgError] = useState(false);
   const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
   const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
+  
+  const probability = (!isBanned && totalActiveWeight > 0) 
+    ? ((currentWeight / totalActiveWeight) * 100).toFixed(1) 
+    : "0.0";
   
   return (
     <div className={`flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 rounded border transition-colors ${isBanned ? 'bg-red-900/20 border-val-red/50 opacity-60 hover:opacity-100' : 'bg-val-dark border-val-gray/20 hover:border-val-gray/50'}`}>
@@ -84,7 +89,10 @@ const AdvancedItemCard: React.FC<{
         <Ban className="w-2.5 h-2.5 md:w-3 md:h-3" /> {isBanned ? 'BANNED' : t.ban}
       </button>
       <div className="flex items-center justify-between gap-1 mt-auto px-1">
-        <span className="text-[8px] md:text-[9px] text-val-gray shrink-0">{t.weight}:</span>
+        <div className="flex flex-col items-start gap-0.5">
+          <span className="text-[7px] md:text-[8px] text-val-gray uppercase leading-none">{t.weight}</span>
+          <span className={`text-[9px] md:text-[10px] font-mono leading-none ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>{probability}%</span>
+        </div>
         <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} />
       </div>
     </div>
@@ -122,11 +130,8 @@ const QuickBanCarousel: React.FC<{
   
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between items-end px-1">
+      <div className="flex justify-between items-end px-1 mb-1">
         <span className="text-xs md:text-sm font-bold text-val-gray">{title}</span>
-        <span className="text-[10px] md:text-xs text-val-red font-bold bg-val-red/10 px-1.5 py-0.5 rounded border border-val-red/20">
-          {t.totalWeight.replace('{weight}', String(activeWeight))}
-        </span>
       </div>
       <div className="relative group flex items-center">
         <button 
@@ -141,6 +146,10 @@ const QuickBanCarousel: React.FC<{
             const isBanned = bannedList.includes(item);
             const currentWeight = weights[item] ?? 10;
             const [imgError, setImgError] = useState(false);
+            
+            const probability = (!isBanned && activeWeight > 0) 
+              ? ((currentWeight / activeWeight) * 100).toFixed(1) 
+              : "0.0";
             
             return (
               <div key={item} className={`shrink-0 snap-start flex flex-col gap-2 ${widthClass} relative`}>
@@ -175,7 +184,8 @@ const QuickBanCarousel: React.FC<{
                   </div>
                 </button>
 
-                <div className="flex items-center justify-center px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative">
+                <div className="flex items-center justify-between px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1">
+                  <span className={`text-[9px] md:text-[10px] font-mono ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>{probability}%</span>
                   <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} />
                 </div>
               </div>
@@ -395,19 +405,17 @@ const App: React.FC = () => {
     }));
   };
 
-  // なぜ: トグルUIを簡潔に描画するためのヘルパー関数
-  const renderToggle = (key: keyof RandomizerConfig, label: string, disabled: boolean = false) => (
-    <label key={key} className={`flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/50'}`}>
+  const renderToggle = (key: keyof RandomizerConfig, label: string) => (
+    <label key={key} className="flex items-center gap-2 cursor-pointer group bg-black/30 px-3 py-1.5 transition-colors rounded hover:bg-black/50">
       <div className="relative pointer-events-none shrink-0">
         <input 
           type="checkbox" 
           className="sr-only" 
           checked={config[key]}
-          onChange={() => !disabled && toggleConfig(key)}
-          disabled={disabled}
+          onChange={() => toggleConfig(key)}
         />
-        <div className={`w-8 h-4 rounded-full transition-colors ${config[key] && !disabled ? 'bg-val-red' : 'bg-val-gray'}`}></div>
-        <div className={`absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform ${config[key] && !disabled ? 'translate-x-4' : ''}`}></div>
+        <div className={`w-8 h-4 rounded-full transition-colors ${config[key] ? 'bg-val-red' : 'bg-val-gray'}`}></div>
+        <div className={`absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform ${config[key] ? 'translate-x-4' : ''}`}></div>
       </div>
       <span className="uppercase text-xs md:text-sm tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label}</span>
     </label>
@@ -502,9 +510,6 @@ const App: React.FC = () => {
         <summary className="font-bold text-lg cursor-pointer flex justify-between items-center outline-none">
           <div className="flex items-center gap-3">
             {title}
-            <span className="text-xs md:text-sm bg-black/40 text-val-light px-2 py-0.5 rounded border border-val-gray/30 font-normal tracking-wider">
-              {t.totalWeight.replace('{weight}', String(activeWeight))}
-            </span>
           </div>
           <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
         </summary>
@@ -537,6 +542,7 @@ const App: React.FC = () => {
               category={category}
               isBanned={advanced[banKey].includes(item)}
               currentWeight={advanced[weightKey][item] ?? 10}
+              totalActiveWeight={activeWeight}
               onToggleBan={() => toggleBan(banKey, item)}
               onUpdateWeight={(w) => updateWeight(weightKey, item, w)}
               t={t}
@@ -629,7 +635,11 @@ const App: React.FC = () => {
                 <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">
                   <h3 className="text-sm md:text-base font-bold text-val-gray border-b border-val-gray/30 pb-1.5 mb-1">{t.categoryTeam}</h3>
                   {renderToggle('autoTeams', t.autoTeams)}
-                  {renderToggle('useRanks', t.useRanks, !config.autoTeams)}
+                  {config.autoTeams && (
+                    <div className="pl-4 ml-2 border-l-2 border-val-gray/30 flex flex-col gap-2">
+                      {renderToggle('useRanks', t.useRanks)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-val-dark/50 p-3 rounded border border-val-gray/20 flex flex-col gap-2">

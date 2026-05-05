@@ -38,6 +38,5 @@
   "unbanConfirm": "{weapon} is currently banned.\nDo you want to unban and allow it?",
   "maxRankDifference": "Max Rank Weight Difference",
   "teamWeight": "Total Weight: {weight}",
-  "totalWeight": "Total Weight: {weight}",
   "notEnoughAgentsWarning": "If duplicate agents are not allowed, at least 5 agents must remain unbanned."
 }
