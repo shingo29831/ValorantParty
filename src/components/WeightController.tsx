@@ -44,18 +44,18 @@ export const WeightController: React.FC<Props> = ({ value, onChange, disabled, v
 
   if (variant === 'arrows-only') {
     return (
-      <div className="flex items-center gap-2 justify-center w-full">
+      <div className="flex items-center gap-1.5 justify-end">
         {!disabled ? (
           <>
             <button onClick={() => handleAdjust(-1)} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/40 rounded hover:bg-black/60 border border-transparent hover:border-val-red/30" title="Decrease Weight">
-              <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
+              <ChevronDown className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </button>
             <button onClick={() => handleAdjust(1)} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/40 rounded hover:bg-black/60 border border-transparent hover:border-val-red/30" title="Increase Weight">
-              <ChevronUp className="w-4 h-4 md:w-5 md:h-5" />
+              <ChevronUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </button>
           </>
         ) : (
-          <div className="h-6 md:h-7"></div>
+          <div className="h-5 md:h-6"></div>
         )}
       </div>
     );

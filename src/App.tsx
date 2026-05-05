@@ -176,15 +176,17 @@ const QuickBanCarousel: React.FC<{
                     </div>
                   )}
                   
+                  {/* なぜ: 名前の横にあった確率表示を削除し、アイテム名のみ表示する */}
                   <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1.5 pt-6 pointer-events-none text-center">
                     <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
                       <span>{item}</span>
-                      {!isBanned && <span className="text-[10px] md:text-xs font-mono text-val-light">{probability}%</span>}
                     </div>
                   </div>
                 </button>
 
-                <div className="flex items-center justify-center px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative">
+                {/* なぜ: カード下部のコントローラー横に確率表示を移動し、両端揃えで配置する */}
+                <div className="flex items-center justify-between px-2 py-1 bg-black/40 rounded border border-val-gray/30 relative gap-1">
+                  <span className={`text-[10px] md:text-[11px] font-mono font-bold ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>{probability}%</span>
                   <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} variant="arrows-only" />
                 </div>
               </div>
