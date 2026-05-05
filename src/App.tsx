@@ -93,7 +93,7 @@ const AdvancedItemCard: React.FC<{
       </button>
       <div className="flex items-center justify-between gap-1 mt-auto px-1">
         <span className="text-[8px] md:text-[9px] text-val-gray shrink-0">{t.weight}:</span>
-        <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} />
+        <WeightController value={currentWeight} onChange={onUpdateWeight} disabled={isBanned} variant="full" />
       </div>
     </div>
   );
@@ -185,7 +185,7 @@ const QuickBanCarousel: React.FC<{
                 </button>
 
                 <div className="flex items-center justify-center px-1.5 py-1 bg-black/40 rounded border border-val-gray/30 relative">
-                  <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} />
+                  <WeightController value={currentWeight} onChange={(w) => onUpdateWeight(item, w)} disabled={isBanned} variant="arrows-only" />
                 </div>
               </div>
             );

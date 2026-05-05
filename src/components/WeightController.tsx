@@ -1,6 +1,6 @@
 // src/components/WeightController.tsx
 // AI Role: 数値入力UIコンポーネント
-// 役割: 重み付けを調整するためのコントローラーUIを提供する
+// 役割: 重み付けを調整するためのコントローラーUIを提供する。variantによって表示モードを切り替える。
 
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
@@ -9,9 +9,10 @@ interface Props {
   value: number;
   onChange: (val: number) => void;
   disabled?: boolean;
+  variant?: 'full' | 'arrows-only';
 }
 
-export const WeightController: React.FC<Props> = ({ value, onChange, disabled }) => {
+export const WeightController: React.FC<Props> = ({ value, onChange, disabled, variant = 'full' }) => {
   const [localValue, setLocalValue] = useState<string>(value.toString());
 
   useEffect(() => {
@@ -40,6 +41,25 @@ export const WeightController: React.FC<Props> = ({ value, onChange, disabled })
       setLocalValue(numVal.toString());
     }
   };
+
+  if (variant === 'arrows-only') {
+    return (
+      <div className="flex items-center gap-2 justify-center w-full">
+        {!disabled ? (
+          <>
+            <button onClick={() => handleAdjust(-1)} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/40 rounded hover:bg-black/60 border border-transparent hover:border-val-red/30" title="Decrease Weight">
+              <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+            <button onClick={() => handleAdjust(1)} className="text-val-gray hover:text-val-red transition-colors p-1 bg-black/40 rounded hover:bg-black/60 border border-transparent hover:border-val-red/30" title="Increase Weight">
+              <ChevronUp className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+          </>
+        ) : (
+          <div className="h-6 md:h-7"></div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1 group/ctrl relative">
