@@ -2,7 +2,7 @@
 // AI Role: プレイヤー設定行UIコンポーネント
 // 役割: 各プレイヤーの名前、ランク、希望ロール、固定チームを設定する入力UIを提供する。DnDによる入れ替えも担当する。
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Player, Rank, Tier, Role, Team, RandomizerConfig } from '../types';
 import { ROLES } from '../constants/valorant';
 import { RoleIcon } from './RoleIcon';
@@ -35,6 +35,8 @@ export const PlayerRow: React.FC<Props> = ({
   onSwapPlayers,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  // なぜ: 子要素にマウスが乗った際の誤検知(フリッカー)を防ぐためのカウンター
+  const dragCounter = useRef(0);
 
   // DnD: ドラッグ開始時
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
@@ -48,6 +50,8 @@ export const PlayerRow: React.FC<Props> = ({
   // DnD: ドラッグ終了時
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     if (e.target instanceof HTMLElement) e.target.style.opacity = '1';
+    dragCounter.current = 0;
+    setIsDragOver(false);
   };
 
   // DnD: 要素上にホバーした時
@@ -59,17 +63,25 @@ export const PlayerRow: React.FC<Props> = ({
   // DnD: ホバーに入った時（ハイライト）
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    setIsDragOver(true);
+    dragCounter.current += 1;
+    if (dragCounter.current === 1) {
+      setIsDragOver(true);
+    }
   };
 
   // DnD: ホバーから出た時
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    setIsDragOver(false);
+    e.preventDefault();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragOver(false);
+    }
   };
 
   // DnD: ドロップ時に入れ替え処理を実行
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    dragCounter.current = 0;
     setIsDragOver(false);
     const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
     if (!isNaN(dragIndex) && dragIndex !== index) {
@@ -86,11 +98,12 @@ export const PlayerRow: React.FC<Props> = ({
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`bg-black/40 p-1.5 md:p-2 border transition-all flex items-center gap-1.5 md:gap-3 cursor-grab active:cursor-grabbing ${
-        isDragOver ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.6)] scale-[1.02] z-10' : 'border-val-gray/20 focus-within:border-val-red'
+      className={`bg-black/40 p-1.5 md:p-2 transition-all flex items-center gap-1.5 md:gap-3 cursor-grab active:cursor-grabbing rounded ${
+        isDragOver 
+          ? 'border-2 border-val-red shadow-[0_0_12px_rgba(255,70,85,0.8)] scale-[1.02] z-10' 
+          : 'border border-val-gray/20 focus-within:border-val-red'
       }`}
     >
-      {/* ドラッグ操作用のグリップアイコン */}
       <div className="text-val-gray shrink-0 flex items-center justify-center hover:text-white transition-colors">
         <GripVertical className="w-4 h-4 md:w-5 md:h-5" />
       </div>
@@ -130,7 +143,7 @@ export const PlayerRow: React.FC<Props> = ({
       </div>
 
       {config.restrictAgents && (
-        <div className="flex gap-0.5 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
+        <div className="flex gap-0.5 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0 pointer-events-none md:pointer-events-auto">
           {ROLES.map((role) => {
             const isSelected = config.restrictRoles || player.preferredRoles.includes(role);
             const isDisabled = config.restrictRoles;
@@ -144,7 +157,7 @@ export const PlayerRow: React.FC<Props> = ({
                   isSelected
                     ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]'
                     : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'
-                } ${isDisabled ? 'cursor-not-allowed opacity-80' : ''}`}
+                } ${isDisabled ? 'cursor-not-allowed opacity-80' : 'pointer-events-auto'}`}
                 title={isDisabled ? 'Random Role Enabled' : role}
               >
                 <RoleIcon role={role} className="w-3.5 h-3.5 md:w-5 md:h-5 drop-shadow-md" />
