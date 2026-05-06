@@ -51,8 +51,6 @@ const ItemCard: React.FC<{
 }> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t, className = "" }) => {
   const [imgError, setImgError] = useState(false);
   const [showWeightOverlay, setShowWeightOverlay] = useState(false);
-  
-  // 修正箇所: NodeJS.Timeout の代わりに ReturnType を使用
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
 
@@ -70,7 +68,7 @@ const ItemCard: React.FC<{
 
     timeoutRef.current = setTimeout(() => {
       setShowWeightOverlay(false);
-    }, 500);
+    }, 400);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -85,8 +83,7 @@ const ItemCard: React.FC<{
   const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
 
   return (
-    // なぜ: カード全体にホバー判定を持たせるため `group/card` クラスを追加する
-    <div className={`flex flex-col gap-1.5 md:gap-2 group/card ${className}`}>
+    <div className={`flex flex-col gap-2 group/card ${className}`}>
       <button
         onClick={onToggleBan}
         className={`relative w-full rounded overflow-hidden border-2 transition-all group ${isBanned ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 hover:border-val-gray/60'} ${aspectClass} ${bgClass}`}
@@ -96,57 +93,57 @@ const ItemCard: React.FC<{
           <img
             src={getImagePath(category, item)}
             alt={item}
-            className={`w-full h-full transition-transform duration-300 ${category === 'weapons' ? 'object-contain p-1' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100 group-hover:scale-110'}`}
+            className={`w-full h-full transition-transform duration-300 ${category === 'weapons' ? 'object-contain p-2' : 'object-cover object-top'} ${isBanned ? 'grayscale opacity-40' : 'opacity-100 group-hover:scale-110'}`}
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="flex items-center justify-center w-full h-full text-center p-1">
-            <span className={`text-[10px] md:text-xs font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
+          <div className="flex items-center justify-center w-full h-full text-center p-2">
+            <span className={`text-xs md:text-sm font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
           </div>
         )}
         
         {isBanned && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/30 z-10">
-            <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-0.5" />
-            <span className="text-[10px] md:text-xs text-white font-bold leading-tight px-1 whitespace-nowrap tracking-wider">BANNED</span>
+            <Ban className="w-10 h-10 md:w-14 md:h-14 text-val-red drop-shadow-md mb-1" />
+            <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap tracking-wider">BANNED</span>
           </div>
         )}
 
         <div 
           className={`absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 pointer-events-none transition-opacity ${showWeightOverlay && !isBanned ? 'opacity-100 duration-75' : 'opacity-0 duration-1000 ease-out'}`}
         >
-          <span className="text-val-gray text-xs md:text-sm uppercase font-bold tracking-widest">{t.weight}</span>
-          <span className="text-5xl md:text-6xl text-white font-bold drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">{currentWeight}</span>
+          <span className="text-val-gray text-sm md:text-base uppercase font-bold tracking-widest">{t.weight}</span>
+          <span className="text-6xl md:text-7xl text-white font-bold drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">{currentWeight}</span>
         </div>
         
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-8 pointer-events-none text-center z-10">
-          <div className={`font-bold text-xs md:text-sm truncate drop-shadow-md flex items-center justify-center gap-1.5 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-10 pointer-events-none text-center z-10">
+          <div className={`font-bold text-sm md:text-base truncate drop-shadow-md flex items-center justify-center gap-2 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
             <span>{item}</span>
           </div>
         </div>
       </button>
 
-      <div className="flex items-center justify-between px-1.5 py-1.5 md:py-2 bg-black/40 rounded border border-val-gray/30 relative gap-1 mt-auto">
+      <div className="flex items-center justify-between px-2 py-2 md:py-3 bg-black/40 rounded border border-val-gray/30 relative gap-2 mt-auto">
         <button 
           onClick={() => onUpdateWeight(Math.max(0, currentWeight - 1))} 
           disabled={isBanned}
-          className={`text-val-gray hover:text-val-red transition-all duration-300 p-1.5 md:p-2 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0 ${isBanned ? 'invisible' : 'opacity-0 pointer-events-none group-hover/card:opacity-100 group-hover/card:pointer-events-auto'}`} 
+          className={`text-val-gray hover:text-val-red transition-all duration-300 p-2 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0 ${isBanned ? 'invisible' : 'opacity-0 pointer-events-none group-hover/card:opacity-100 group-hover/card:pointer-events-auto'}`} 
           title="Decrease Weight"
         >
-          <ChevronDown className="w-5 h-5 md:w-7 md:h-7" />
+          <ChevronDown className="w-6 h-6 md:w-8 md:h-8" />
         </button>
         
-        <span className={`text-lg md:text-xl lg:text-2xl font-mono font-bold text-center flex-1 tracking-wider transition-colors ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
+        <span className={`text-xl md:text-2xl lg:text-3xl font-mono font-bold text-center flex-1 tracking-wider transition-colors ${isBanned ? 'text-val-gray/50' : 'text-val-light'}`}>
           {probability}%
         </span>
 
         <button 
           onClick={() => onUpdateWeight(Math.max(0, currentWeight + 1))} 
           disabled={isBanned}
-          className={`text-val-gray hover:text-val-red transition-all duration-300 p-1.5 md:p-2 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0 ${isBanned ? 'invisible' : 'opacity-0 pointer-events-none group-hover/card:opacity-100 group-hover/card:pointer-events-auto'}`} 
+          className={`text-val-gray hover:text-val-red transition-all duration-300 p-2 bg-black/50 rounded hover:bg-black/80 border border-transparent hover:border-val-red/30 shrink-0 ${isBanned ? 'invisible' : 'opacity-0 pointer-events-none group-hover/card:opacity-100 group-hover/card:pointer-events-auto'}`} 
           title="Increase Weight"
         >
-          <ChevronUp className="w-5 h-5 md:w-7 md:h-7" />
+          <ChevronUp className="w-6 h-6 md:w-8 md:h-8" />
         </button>
       </div>
     </div>
@@ -176,23 +173,24 @@ const QuickBanCarousel: React.FC<{
     }
   };
 
-  const widthClass = category === 'agents' ? 'w-24 md:w-32 lg:w-36' : 'w-36 md:w-48 lg:w-56';
+  // なぜ: 初期画面のカードサイズを全体的に大きく確保するため、widthクラスの数値を引き上げる
+  const widthClass = category === 'agents' ? 'w-32 md:w-40 lg:w-48' : 'w-48 md:w-64 lg:w-72';
   const activeWeight = items.reduce((sum, item) => bannedList.includes(item) ? sum : sum + (weights[item] ?? 10), 0);
   
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between items-end px-1 mb-1">
-        <span className="text-xs md:text-sm font-bold text-val-gray">{title}</span>
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-between items-end px-1 mb-2">
+        <span className="text-sm md:text-base font-bold text-val-gray">{title}</span>
       </div>
       <div className="relative group flex items-center">
         <button 
           onClick={() => scroll('left')} 
-          className="absolute left-0 z-20 bg-black/80 hover:bg-val-red p-1 md:p-2 rounded-r opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+          className="absolute left-0 z-20 bg-black/80 hover:bg-val-red p-2 md:p-3 rounded-r opacity-0 group-hover:opacity-100 transition-all shadow-lg"
         >
-          <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-white" />
         </button>
 
-        <div ref={scrollRef} className="flex overflow-x-auto gap-3 pb-4 pt-1 snap-x scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] w-full px-1">
+        <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 pb-6 pt-2 snap-x scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] w-full px-2">
           {items.map(item => {
             const isBanned = bannedList.includes(item);
             const currentWeight = weights[item] ?? 10;
@@ -215,9 +213,9 @@ const QuickBanCarousel: React.FC<{
 
         <button 
           onClick={() => scroll('right')} 
-          className="absolute right-0 z-20 bg-black/80 hover:bg-val-red p-1 md:p-2 rounded-l opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+          className="absolute right-0 z-20 bg-black/80 hover:bg-val-red p-2 md:p-3 rounded-l opacity-0 group-hover:opacity-100 transition-all shadow-lg"
         >
-          <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-white" />
         </button>
       </div>
     </div>
@@ -232,11 +230,11 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
 
   return (
     <div className={`bg-black/60 border ${borderColor} ${hoverColor} transition-colors flex flex-col h-full overflow-hidden relative group`}>
-      <div className="p-1 md:p-1.5 flex justify-between items-center bg-val-dark z-10 border-b border-val-gray/20">
-        <div className="font-bold text-xs md:text-sm truncate pr-1 text-white">{player.name}</div>
+      <div className="p-1.5 md:p-2 flex justify-between items-center bg-val-dark z-10 border-b border-val-gray/20">
+        <div className="font-bold text-sm md:text-base truncate pr-1 text-white">{player.name}</div>
         {player.rank !== 'None' && (
           <div className="flex items-center gap-1">
-            <span className="text-[9px] md:text-[10px] font-bold bg-val-gray/20 px-1 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
+            <span className="text-[10px] md:text-xs font-bold bg-val-gray/20 px-1.5 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
               {player.rank === 'Radiant' ? player.rank : `${player.rank} ${player.tier}`}
             </span>
           </div>
@@ -248,13 +246,13 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
           {player.mainWeapon && (
             <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
               <img src={getImagePath('weapons', player.mainWeapon)} alt={player.mainWeapon} className="w-full h-full object-contain p-0.5" onError={(e) => e.currentTarget.style.display = 'none'} />
-              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[9px] px-1 text-val-light font-bold truncate max-w-full">{player.mainWeapon}</span>
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[9px] md:text-[11px] px-1 text-val-light font-bold truncate max-w-full">{player.mainWeapon}</span>
             </div>
           )}
           {player.subWeapon && (
             <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
               <img src={getImagePath('weapons', player.subWeapon)} alt={player.subWeapon} className="w-full h-full object-contain p-0.5" onError={(e) => e.currentTarget.style.display = 'none'} />
-              <span className="absolute bottom-0 left-0 bg-black/70 text-[7px] md:text-[8px] px-1 text-val-light font-bold truncate max-w-full">{player.subWeapon}</span>
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[10px] px-1 text-val-light font-bold truncate max-w-full">{player.subWeapon}</span>
             </div>
           )}
         </div>
@@ -266,7 +264,7 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
             <img 
               src={getRankImagePath(player.rank, player.tier)} 
               alt={player.rank} 
-              className="w-8 h-8 md:w-12 md:h-12 object-contain drop-shadow-lg"
+              className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-lg"
               onError={(e) => e.currentTarget.style.display = 'none'}
             />
           </div>
@@ -283,7 +281,7 @@ const PlayerCard: React.FC<{ player: PlayerResult; isDefender: boolean }> = ({ p
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-yellow-400 font-bold text-xs md:text-sm uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{player.agent}</span>
+                <span className="text-yellow-400 font-bold text-sm md:text-base uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{player.agent}</span>
               </div>
             )}
             {player.role && (
@@ -554,7 +552,8 @@ const App: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5 mt-6 overflow-visible pb-12">
+        {/* なぜ: 詳細設定画面でもカードを大きく表示するため、表示する列数を減らす */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mt-6 overflow-visible pb-12">
           {displayedItems.map(item => (
             <ItemCard 
               key={item}
@@ -722,7 +721,7 @@ const App: React.FC = () => {
               <h2 className="text-base md:text-lg font-bold mb-4 uppercase italic text-val-gray flex items-center gap-2">
                 <Ban className="w-5 h-5" /> Quick Bans & Weights
               </h2>
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
                 <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
                 <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
@@ -762,7 +761,8 @@ const App: React.FC = () => {
               <div className="mt-6 flex flex-col gap-8">
                 <div>
                   <div className="text-base font-bold text-val-gray mb-4">{t.selectMainWeapon}</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                  {/* なぜ: 武器の組み合わせ設定でも選択ボタンを大きく表示するため、表示する列数を減らす */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {MAIN_WEAPONS.map(mw => {
                       const isSelected = selectedComboMain === mw;
                       const isBanned = advanced.bannedWeapons.includes(mw);
@@ -788,17 +788,17 @@ const App: React.FC = () => {
                           <img 
                             src={getImagePath('weapons', mw)} 
                             alt={mw} 
-                            className={`w-full h-full object-contain p-1.5 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
+                            className={`w-full h-full object-contain p-2 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
                             onError={(e) => e.currentTarget.style.display = 'none'}
                           />
                           {isBanned && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
-                              <Ban className="w-5 h-5 md:w-6 md:h-6 text-val-red drop-shadow-md mb-0.5" />
-                              <span className="text-[8px] md:text-[10px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                              <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
+                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
                             </div>
                           )}
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center z-20">
-                            <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
+                            <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
                               {mw}
                             </div>
                           </div>
@@ -809,7 +809,7 @@ const App: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-base font-bold text-val-gray mb-4">{t.allowedSubWeapons}</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
                     {SUB_WEAPONS.map(sw => {
                       const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
                       const isBanned = advanced.bannedWeapons.includes(sw);
@@ -836,21 +836,21 @@ const App: React.FC = () => {
                           }}
                           className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isAllowed && !isBanned ? 'border-val-red bg-val-dark shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 bg-black/80'}`}
                         >
-                          <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-1.5 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
+                          <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-2 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
                           
                           {isBanned ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
-                              <Ban className="w-5 h-5 md:w-6 md:h-6 text-val-red drop-shadow-md mb-0.5" />
-                              <span className="text-[8px] md:text-[10px] text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                              <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
+                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
                             </div>
                           ) : !isAllowed && (
                             <div className="absolute inset-0 flex items-center justify-center bg-red-900/30 z-10">
-                              <Ban className="w-6 h-6 md:w-8 md:h-8 text-val-red drop-shadow-md" />
+                              <Ban className="w-10 h-10 md:w-12 md:h-12 text-val-red drop-shadow-md" />
                             </div>
                           )}
 
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-1 pt-4 pointer-events-none text-center z-20">
-                            <div className={`font-bold text-[10px] md:text-xs truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
+                            <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
                                 {sw}
                             </div>
                           </div>
