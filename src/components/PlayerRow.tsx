@@ -4,9 +4,9 @@
 
 import React from 'react';
 import { Player, Rank, Tier, Role, Team, RandomizerConfig } from '../types';
-import { RANKS, ROLES } from '../constants/valorant';
+import { ROLES } from '../constants/valorant';
 import { RoleIcon } from './RoleIcon';
-import { getRankImagePath } from '../utils/imageUtils';
+import { RankSelector } from './RankSelector';
 
 interface Props {
   player: Player;
@@ -58,38 +58,13 @@ export const PlayerRow: React.FC<Props> = ({
       />
 
       <div className="flex gap-1.5 md:gap-2 shrink-0 items-center">
-        {player.rank !== 'None' ? (
-          <img
-            src={getRankImagePath(player.rank, player.tier)}
-            alt={player.rank}
-            className="w-8 h-8 md:w-10 md:h-10 object-contain"
-            onError={(e) => (e.currentTarget.style.display = 'none')}
-          />
-        ) : (
-          <div className="w-8 h-8 md:w-10 md:h-10" />
-        )}
-        <select
-          value={player.rank}
-          onChange={(e) => onUpdateRank(index, e.target.value as Rank)}
-          className="bg-val-dark border border-val-gray/50 text-val-light text-sm md:text-base p-1.5 md:p-2 w-[100px] md:w-[120px] outline-none focus:border-val-red cursor-pointer"
-        >
-          {RANKS.map((rank) => (
-            <option key={rank} value={rank}>
-              {rank === 'None' ? t.unranked : rank}
-            </option>
-          ))}
-        </select>
-        {player.rank !== 'None' && player.rank !== 'Radiant' && (
-          <select
-            value={player.tier}
-            onChange={(e) => onUpdateTier(index, Number(e.target.value) as Tier)}
-            className="bg-val-dark border border-val-gray/50 text-val-light text-sm md:text-base p-1.5 md:p-2 w-[45px] md:w-[50px] outline-none focus:border-val-red cursor-pointer"
-          >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-          </select>
-        )}
+        <RankSelector 
+          rank={player.rank}
+          tier={player.tier}
+          onUpdateRank={(rank) => onUpdateRank(index, rank)}
+          onUpdateTier={(tier) => onUpdateTier(index, tier)}
+          t={t}
+        />
       </div>
 
       <div className="flex gap-1 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
