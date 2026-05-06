@@ -67,29 +67,31 @@ export const PlayerRow: React.FC<Props> = ({
         />
       </div>
 
-      <div className="flex gap-1 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
-        {ROLES.map((role) => {
-          // 修正箇所: ランダムロール(restrictRoles)が有効なら強制的に選択状態にし、操作不能にする
-          const isSelected = config.restrictRoles || player.preferredRoles.includes(role);
-          const isDisabled = config.restrictRoles;
+      {/* なぜ: ランダムエージェント無効時はロールを考慮しないため、UIを非表示にしてスッキリさせる */}
+      {config.restrictAgents && (
+        <div className="flex gap-1 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
+          {ROLES.map((role) => {
+            const isSelected = config.restrictRoles || player.preferredRoles.includes(role);
+            const isDisabled = config.restrictRoles;
 
-          return (
-            <button
-              key={role}
-              onClick={() => onToggleRole(index, role)}
-              disabled={isDisabled}
-              className={`p-1.5 md:p-2 rounded transition-colors ${
-                isSelected
-                  ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]'
-                  : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'
-              } ${isDisabled ? 'cursor-not-allowed opacity-80' : ''}`}
-              title={isDisabled ? 'Random Role Enabled' : role}
-            >
-              <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5 drop-shadow-md" />
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={role}
+                onClick={() => onToggleRole(index, role)}
+                disabled={isDisabled}
+                className={`p-1.5 md:p-2 rounded transition-colors ${
+                  isSelected
+                    ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]'
+                    : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'
+                } ${isDisabled ? 'cursor-not-allowed opacity-80' : ''}`}
+                title={isDisabled ? 'Random Role Enabled' : role}
+              >
+                <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5 drop-shadow-md" />
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
