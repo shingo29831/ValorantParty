@@ -1,6 +1,6 @@
 // src/App.tsx
 // AI Role: メインUIの提供
-// 役割: App.tsxの肥大化を防ぐため、RoleIconとWeightControllerを別ファイルへ分割
+// 役割: アプリケーション全体のUI構成と状態管理。コンポーネントを共通化し、表示設定やチーム作成の制御を行う。
 
 import React, { useState, useRef, useEffect } from 'react';
 import { generateMatch, getRankWeight } from './logic/randomizer';
@@ -33,7 +33,7 @@ const getImagePath = (category: 'agents' | 'weapons' | 'maps', name: string) => 
 };
 
 const getRankImagePath = (rank: Rank, tier: Tier) => {
-  if (rank === 'None') return '';
+  if (rank === 'None') return '/images/ranks/Unranked_Rank.png';
   if (rank === 'Radiant') return '/images/ranks/Radiant_Rank.png';
   return `/images/ranks/${rank}_${tier}_Rank.png`;
 };
@@ -173,7 +173,6 @@ const QuickBanCarousel: React.FC<{
     }
   };
 
-  // なぜ: 初期画面のカードサイズを全体的に大きく確保するため、widthクラスの数値を引き上げる
   const widthClass = category === 'agents' ? 'w-32 md:w-40 lg:w-48' : 'w-48 md:w-64 lg:w-72';
   const activeWeight = items.reduce((sum, item) => bannedList.includes(item) ? sum : sum + (weights[item] ?? 10), 0);
   
@@ -552,7 +551,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* なぜ: 詳細設定画面でもカードを大きく表示するため、表示する列数を減らす */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mt-6 overflow-visible pb-12">
           {displayedItems.map(item => (
             <ItemCard 
@@ -724,7 +722,8 @@ const App: React.FC = () => {
               <div className="space-y-8">
                 <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
                 <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
-                <QuickBanCarousel title={t.weaponSettings} items={[...MAIN_WEAPONS, ...SUB_WEAPONS]} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
+                <QuickBanCarousel title="MAIN WEAPONS" items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
+                <QuickBanCarousel title="SUB WEAPONS" items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
               </div>
             </section>
           </div>
@@ -751,7 +750,8 @@ const App: React.FC = () => {
 
             {renderAdvancedSection(t.mapSettings, MAPS, 'bannedMaps', 'mapWeights', 'maps')}
             {renderAdvancedSection(t.agentSettings, AGENTS, 'bannedAgents', 'agentWeights', 'agents')}
-            {renderAdvancedSection(t.weaponSettings, [...MAIN_WEAPONS, ...SUB_WEAPONS], 'bannedWeapons', 'weaponWeights', 'weapons')}
+            {renderAdvancedSection("MAIN WEAPONS", MAIN_WEAPONS, 'bannedWeapons', 'weaponWeights', 'weapons')}
+            {renderAdvancedSection("SUB WEAPONS", SUB_WEAPONS, 'bannedWeapons', 'weaponWeights', 'weapons')}
             
             <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl">
               <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
@@ -761,7 +761,6 @@ const App: React.FC = () => {
               <div className="mt-6 flex flex-col gap-8">
                 <div>
                   <div className="text-base font-bold text-val-gray mb-4">{t.selectMainWeapon}</div>
-                  {/* なぜ: 武器の組み合わせ設定でも選択ボタンを大きく表示するため、表示する列数を減らす */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {MAIN_WEAPONS.map(mw => {
                       const isSelected = selectedComboMain === mw;
@@ -809,7 +808,7 @@ const App: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-base font-bold text-val-gray mb-4">{t.allowedSubWeapons}</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {SUB_WEAPONS.map(sw => {
                       const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
                       const isBanned = advanced.bannedWeapons.includes(sw);
