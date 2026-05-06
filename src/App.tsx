@@ -131,6 +131,22 @@ const App: React.FC = () => {
     setPlayers(newPlayers);
   };
 
+  // 追加箇所: プレイヤーの入れ替えロジック
+  const swapPlayers = (dragIndex: number, dropIndex: number) => {
+    if (dragIndex === dropIndex) return;
+    setPlayers(prev => {
+      const newPlayers = [...prev];
+      const dragPlayer = prev[dragIndex];
+      const dropPlayer = prev[dropIndex];
+      
+      // fixedTeam はその位置（ドロップ先/ドラッグ元）のチーム情報を維持することで所属チームが入れ替わる
+      newPlayers[dragIndex] = { ...dropPlayer, fixedTeam: dragPlayer.fixedTeam };
+      newPlayers[dropIndex] = { ...dragPlayer, fixedTeam: dropPlayer.fixedTeam };
+      
+      return newPlayers;
+    });
+  };
+
   const toggleBan = (listKey: 'bannedMaps' | 'bannedWeapons' | 'bannedAgents', item: string) => {
     setAdvanced(prev => ({
       ...prev,
@@ -300,6 +316,7 @@ const App: React.FC = () => {
                           onUpdateTier={updatePlayerTier}
                           onToggleRole={togglePlayerRole}
                           onToggleTeam={updatePlayerTeam}
+                          onSwapPlayers={swapPlayers}
                         />
                       ))}
                     </div>
@@ -322,6 +339,7 @@ const App: React.FC = () => {
                           onUpdateTier={updatePlayerTier}
                           onToggleRole={togglePlayerRole}
                           onToggleTeam={updatePlayerTeam}
+                          onSwapPlayers={swapPlayers}
                         />
                       ))}
                     </div>
@@ -341,6 +359,7 @@ const App: React.FC = () => {
                       onUpdateTier={updatePlayerTier}
                       onToggleRole={togglePlayerRole}
                       onToggleTeam={updatePlayerTeam}
+                      onSwapPlayers={swapPlayers}
                     />
                   ))}
                 </div>

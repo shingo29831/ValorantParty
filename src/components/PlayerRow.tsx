@@ -1,12 +1,13 @@
 // src/components/PlayerRow.tsx
 // AI Role: プレイヤー設定行UIコンポーネント
-// 役割: 各プレイヤーの名前、ランク、希望ロール、固定チームを設定する入力UIを提供する
+// 役割: 各プレイヤーの名前、ランク、希望ロール、固定チームを設定する入力UIを提供する。DnDによる入れ替えも担当する。
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Player, Rank, Tier, Role, Team, RandomizerConfig } from '../types';
 import { ROLES } from '../constants/valorant';
 import { RoleIcon } from './RoleIcon';
 import { RankSelector } from './RankSelector';
+import { GripVertical } from 'lucide-react';
 
 interface Props {
   player: Player;
@@ -18,6 +19,7 @@ interface Props {
   onUpdateTier: (index: number, tier: Tier) => void;
   onToggleRole: (index: number, role: Role) => void;
   onToggleTeam: (index: number, team: Team) => void;
+  onSwapPlayers: (dragIndex: number, dropIndex: number) => void;
 }
 
 export const PlayerRow: React.FC<Props> = ({
@@ -30,10 +32,70 @@ export const PlayerRow: React.FC<Props> = ({
   onUpdateTier,
   onToggleRole,
   onToggleTeam,
+  onSwapPlayers,
 }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // DnD: ドラッグ開始時
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => {
+      if (e.target instanceof HTMLElement) e.target.style.opacity = '0.4';
+    }, 0);
+  };
+
+  // DnD: ドラッグ終了時
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    if (e.target instanceof HTMLElement) e.target.style.opacity = '1';
+  };
+
+  // DnD: 要素上にホバーした時
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // ドロップを許可
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  // DnD: ホバーに入った時（ハイライト）
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  // DnD: ホバーから出た時
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    setIsDragOver(false);
+  };
+
+  // DnD: ドロップ時に入れ替え処理を実行
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (!isNaN(dragIndex) && dragIndex !== index) {
+      onSwapPlayers(dragIndex, index);
+    }
+  };
+
   return (
-    <div className="bg-black/40 p-2 md:p-3 border border-val-gray/20 focus-within:border-val-red transition-colors flex items-center gap-2 md:gap-3">
-      <span className="text-val-gray font-bold w-5 md:w-6 text-base md:text-lg text-right shrink-0">
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`bg-black/40 p-1.5 md:p-2 border transition-all flex items-center gap-1.5 md:gap-3 cursor-grab active:cursor-grabbing ${
+        isDragOver ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.6)] scale-[1.02] z-10' : 'border-val-gray/20 focus-within:border-val-red'
+      }`}
+    >
+      {/* ドラッグ操作用のグリップアイコン */}
+      <div className="text-val-gray shrink-0 flex items-center justify-center hover:text-white transition-colors">
+        <GripVertical className="w-4 h-4 md:w-5 md:h-5" />
+      </div>
+
+      <span className="text-val-gray font-bold w-4 md:w-5 text-sm md:text-lg text-right shrink-0">
         {index + 1}.
       </span>
 
@@ -53,7 +115,7 @@ export const PlayerRow: React.FC<Props> = ({
         type="text"
         value={player.name}
         onChange={(e) => onUpdateName(index, e.target.value)}
-        className="bg-transparent border-b border-val-gray/50 focus:border-val-red outline-none px-2 py-1 flex-1 text-base md:text-lg min-w-[80px]"
+        className="bg-transparent border-b border-val-gray/50 focus:border-val-red outline-none px-1 md:px-2 py-1 flex-1 text-sm md:text-lg min-w-[60px]"
         placeholder={t.playerName}
       />
 
@@ -67,9 +129,8 @@ export const PlayerRow: React.FC<Props> = ({
         />
       </div>
 
-      {/* なぜ: ランダムエージェント無効時はロールを考慮しないため、UIを非表示にしてスッキリさせる */}
       {config.restrictAgents && (
-        <div className="flex gap-1 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
+        <div className="flex gap-0.5 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
           {ROLES.map((role) => {
             const isSelected = config.restrictRoles || player.preferredRoles.includes(role);
             const isDisabled = config.restrictRoles;
@@ -86,7 +147,7 @@ export const PlayerRow: React.FC<Props> = ({
                 } ${isDisabled ? 'cursor-not-allowed opacity-80' : ''}`}
                 title={isDisabled ? 'Random Role Enabled' : role}
               >
-                <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5 drop-shadow-md" />
+                <RoleIcon role={role} className="w-3.5 h-3.5 md:w-5 md:h-5 drop-shadow-md" />
               </button>
             );
           })}
