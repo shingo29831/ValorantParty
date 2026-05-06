@@ -1,18 +1,18 @@
 // src/App.tsx
 // AI Role: メインUIの提供
-// 役割: アプリケーション全体のUI構成と状態管理。コンポーネントを共通化し、表示設定やチーム作成の制御を行う。
+// 役割: アプリケーション全体のUI構成と状態管理。分割されたコンポーネントを組み合わせ、生成の制御を行う。
 
 import React, { useState } from 'react';
 import { generateMatch, getRankWeight } from './logic/randomizer';
 import { validateTeamCreation } from './logic/validator';
 import { Player, RandomizerConfig, AdvancedConfig, Rank, Tier, Role, Team, MatchResult } from './types';
 import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban } from 'lucide-react';
-import { RANKS, ROLES, MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS, AGENT_ROLES } from './constants/valorant';
-import { RoleIcon } from './components/RoleIcon';
+import { MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS } from './constants/valorant';
 import { PlayerCard } from './components/PlayerCard';
-import { ItemCard } from './components/ItemCard';
 import { QuickBanCarousel } from './components/QuickBanCarousel';
-import { getImagePath, getRankImagePath } from './utils/imageUtils';
+import { PlayerRow } from './components/PlayerRow';
+import { AdvancedCategory } from './components/AdvancedCategory';
+import { getImagePath } from './utils/imageUtils';
 
 import jaTranslation from './locales/ja.json';
 import enTranslation from './locales/en.json';
@@ -66,8 +66,6 @@ const App: React.FC = () => {
   });
 
   const [selectedComboMain, setSelectedComboMain] = useState<string>(MAIN_WEAPONS[0]);
-  const [agentFilter, setAgentFilter] = useState<Role | 'All'>('All');
-
   const [result, setResult] = useState<MatchResult | null>(null);
 
   const t = TRANSLATIONS[lang] as Record<string, string>;
@@ -164,138 +162,6 @@ const App: React.FC = () => {
       <span className="uppercase text-sm md:text-base tracking-wider group-hover:text-val-red transition-colors whitespace-nowrap">{label}</span>
     </label>
   );
-
-  const renderPlayerRow = (player: Player, index: number) => (
-    <div key={player.id} className="bg-black/40 p-2 md:p-3 border border-val-gray/20 focus-within:border-val-red transition-colors flex items-center gap-2 md:gap-3">
-      <span className="text-val-gray font-bold w-5 md:w-6 text-base md:text-lg text-right shrink-0">
-        {index + 1}.
-      </span>
-
-      {!config.autoTeams && (
-        <button
-          onClick={() => updatePlayerTeam(index, player.fixedTeam === 'Team 1' ? 'Team 2' : 'Team 1')}
-          className={`p-1.5 text-xs md:text-sm font-bold w-8 md:w-10 rounded shrink-0 transition-colors ${player.fixedTeam === 'Team 1' ? 'bg-blue-500 text-white' : 'bg-red-500 text-white'}`}
-          title="Click to change team"
-        >
-          {player.fixedTeam === 'Team 1' ? 'T1' : 'T2'}
-        </button>
-      )}
-
-      <input
-        type="text"
-        value={player.name}
-        onChange={(e) => updatePlayerName(index, e.target.value)}
-        className="bg-transparent border-b border-val-gray/50 focus:border-val-red outline-none px-2 py-1 flex-1 text-base md:text-lg min-w-[80px]"
-        placeholder={t.playerName}
-      />
-      
-      <div className="flex gap-1.5 md:gap-2 shrink-0 items-center">
-        {player.rank !== 'None' ? (
-          <img 
-            src={getRankImagePath(player.rank, player.tier)} 
-            alt={player.rank} 
-            className="w-8 h-8 md:w-10 md:h-10 object-contain"
-            onError={(e) => e.currentTarget.style.display = 'none'}
-          />
-        ) : (
-          <div className="w-8 h-8 md:w-10 md:h-10" />
-        )}
-        <select
-          value={player.rank}
-          onChange={(e) => updatePlayerRank(index, e.target.value as Rank)}
-          className="bg-val-dark border border-val-gray/50 text-val-light text-sm md:text-base p-1.5 md:p-2 w-[100px] md:w-[120px] outline-none focus:border-val-red cursor-pointer"
-        >
-          {RANKS.map(rank => (
-            <option key={rank} value={rank}>
-              {rank === 'None' ? t.unranked : rank}
-            </option>
-          ))}
-        </select>
-        {player.rank !== 'None' && player.rank !== 'Radiant' && (
-          <select
-            value={player.tier}
-            onChange={(e) => updatePlayerTier(index, Number(e.target.value) as Tier)}
-            className="bg-val-dark border border-val-gray/50 text-val-light text-sm md:text-base p-1.5 md:p-2 w-[45px] md:w-[50px] outline-none focus:border-val-red cursor-pointer"
-          >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-          </select>
-        )}
-      </div>
-
-      <div className="flex gap-1 md:gap-1.5 items-center bg-black/30 p-1 md:p-1.5 rounded border border-val-gray/30 shrink-0">
-        {ROLES.map(role => {
-          const isSelected = player.preferredRoles.includes(role);
-          return (
-            <button
-              key={role}
-              onClick={() => togglePlayerRole(index, role)}
-              className={`p-1.5 md:p-2 rounded transition-colors ${isSelected ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]' : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'}`}
-              title={role}
-            >
-              <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5 drop-shadow-md" />
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  const renderAdvancedSection = (title: string, items: string[], banKey: 'bannedMaps' | 'bannedWeapons' | 'bannedAgents', weightKey: 'mapWeights' | 'weaponWeights' | 'agentWeights', category: 'maps' | 'weapons' | 'agents') => {
-    const displayedItems = category === 'agents' && agentFilter !== 'All' 
-      ? items.filter(item => AGENT_ROLES[item] === agentFilter)
-      : items;
-
-    const activeWeight = items.reduce((sum, item) => advanced[banKey].includes(item) ? sum : sum + (advanced[weightKey][item] ?? 10), 0);
-
-    return (
-      <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-4 md:mb-6 shadow-xl">
-        <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
-          <div className="flex items-center gap-3">
-            {title}
-          </div>
-          <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
-        </summary>
-
-        {category === 'agents' && (
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={() => setAgentFilter('All')}
-              className={`px-4 py-2 border rounded text-sm md:text-base font-bold transition-colors ${agentFilter === 'All' ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
-            >
-              ALL
-            </button>
-            {ROLES.map(role => (
-              <button
-                key={role}
-                onClick={() => setAgentFilter(role)}
-                className={`flex items-center gap-2 px-4 py-2 border rounded text-sm md:text-base font-bold transition-colors ${agentFilter === role ? 'border-val-red bg-val-red/20 text-white' : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'}`}
-              >
-                <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5" /> {role}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mt-6 overflow-visible pb-12">
-          {displayedItems.map(item => (
-            <ItemCard 
-              key={item}
-              item={item}
-              category={category}
-              isBanned={advanced[banKey].includes(item)}
-              currentWeight={advanced[weightKey][item] ?? 10}
-              totalActiveWeight={activeWeight}
-              onToggleBan={() => toggleBan(banKey, item)}
-              onUpdateWeight={(w) => updateWeight(weightKey, item, w)}
-              t={t}
-            />
-          ))}
-        </div>
-      </details>
-    );
-  };
 
   const allPlayers = result ? [...result.team1, ...result.team2] : [];
   const defenders = allPlayers.filter(p => p.assignedSide === 'Defender');
@@ -422,7 +288,20 @@ const App: React.FC = () => {
                       <span className="text-sm font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 1').length} {t.playerCount}</span>
                     </h3>
                     <div className="flex flex-col gap-3">
-                      {players.map((p, i) => p.fixedTeam === 'Team 1' && renderPlayerRow(p, i))}
+                      {players.map((p, i) => p.fixedTeam === 'Team 1' && (
+                        <PlayerRow
+                          key={p.id}
+                          player={p}
+                          index={i}
+                          config={config}
+                          t={t}
+                          onUpdateName={updatePlayerName}
+                          onUpdateRank={updatePlayerRank}
+                          onUpdateTier={updatePlayerTier}
+                          onToggleRole={togglePlayerRole}
+                          onToggleTeam={updatePlayerTeam}
+                        />
+                      ))}
                     </div>
                   </div>
                   <div>
@@ -431,13 +310,39 @@ const App: React.FC = () => {
                       <span className="text-sm font-normal text-val-light opacity-60">{players.filter(p => p.fixedTeam === 'Team 2').length} {t.playerCount}</span>
                     </h3>
                     <div className="flex flex-col gap-3">
-                      {players.map((p, i) => p.fixedTeam === 'Team 2' && renderPlayerRow(p, i))}
+                      {players.map((p, i) => p.fixedTeam === 'Team 2' && (
+                        <PlayerRow
+                          key={p.id}
+                          player={p}
+                          index={i}
+                          config={config}
+                          t={t}
+                          onUpdateName={updatePlayerName}
+                          onUpdateRank={updatePlayerRank}
+                          onUpdateTier={updatePlayerTier}
+                          onToggleRole={togglePlayerRole}
+                          onToggleTeam={updatePlayerTeam}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">
-                  {players.map((p, i) => renderPlayerRow(p, i))}
+                  {players.map((p, i) => (
+                    <PlayerRow
+                      key={p.id}
+                      player={p}
+                      index={i}
+                      config={config}
+                      t={t}
+                      onUpdateName={updatePlayerName}
+                      onUpdateRank={updatePlayerRank}
+                      onUpdateTier={updatePlayerTier}
+                      onToggleRole={togglePlayerRole}
+                      onToggleTeam={updatePlayerTeam}
+                    />
+                  ))}
                 </div>
               )}
             </section>
@@ -475,10 +380,10 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {renderAdvancedSection(t.mapSettings, MAPS, 'bannedMaps', 'mapWeights', 'maps')}
-            {renderAdvancedSection(t.agentSettings, AGENTS, 'bannedAgents', 'agentWeights', 'agents')}
-            {renderAdvancedSection("MAIN WEAPONS", MAIN_WEAPONS, 'bannedWeapons', 'weaponWeights', 'weapons')}
-            {renderAdvancedSection("SUB WEAPONS", SUB_WEAPONS, 'bannedWeapons', 'weaponWeights', 'weapons')}
+            <AdvancedCategory title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggleBan={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, w) => updateWeight('mapWeights', item, w)} t={t} />
+            <AdvancedCategory title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggleBan={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, w) => updateWeight('agentWeights', item, w)} t={t} />
+            <AdvancedCategory title="MAIN WEAPONS" items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
+            <AdvancedCategory title="SUB WEAPONS" items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
             
             <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl">
               <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
