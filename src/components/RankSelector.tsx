@@ -52,7 +52,7 @@ export const RankSelector: React.FC<Props> = ({ rank, tier, onUpdateRank, onUpda
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 hover:bg-black/30 rounded border border-transparent hover:border-val-gray/50 transition-colors bg-black/20 shrink-0"
-        title={rank === 'None' ? t.unranked : `${rank} ${rank !== 'Radiant' ? tier : ''}`}
+        title={rank === 'None' ? t.unranked : `${t[rank] || rank} ${rank !== 'Radiant' ? tier : ''}`}
       >
         <img
           src={getRankImagePath(rank, tier)}
@@ -66,7 +66,6 @@ export const RankSelector: React.FC<Props> = ({ rank, tier, onUpdateRank, onUpda
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-val-dark/95 backdrop-blur-sm border border-val-gray/30 p-3 rounded-lg shadow-2xl z-50 max-w-[90vw] md:max-w-none">
           <div className="flex gap-1 md:gap-2 overflow-x-auto px-1 py-1 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-val-gray/50 [&::-webkit-scrollbar-thumb]:rounded-full">
             {RANK_COLUMNS.map((col) => (
-              /* 修正箇所: テキスト長に依存しないように横幅を固定 (w-16 md:w-20) し、shrink-0 で縮小を防ぐ */
               <div key={col.rank} className="flex flex-col gap-2 md:gap-3 justify-end items-center w-16 md:w-20 shrink-0">
                 {col.tiers.map((tVal) => {
                   const isSelected = rank === col.rank && (col.tiers.length === 1 || tier === tVal);
@@ -75,7 +74,7 @@ export const RankSelector: React.FC<Props> = ({ rank, tier, onUpdateRank, onUpda
                       key={`${col.rank}-${tVal}`}
                       onClick={() => handleSelect(col.rank, tVal)}
                       className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded transition-colors border group relative shrink-0 ${isSelected ? 'bg-white/10 border-white/30' : 'border-transparent hover:bg-white/10 hover:border-white/20'}`}
-                      title={col.rank === 'None' ? t.unranked : `${col.rank} ${col.tiers.length > 1 ? tVal : ''}`.trim()}
+                      title={col.rank === 'None' ? t.unranked : `${t[col.rank] || col.rank} ${col.tiers.length > 1 ? tVal : ''}`.trim()}
                     >
                       <img
                         src={getRankImagePath(col.rank, tVal)}
@@ -86,9 +85,8 @@ export const RankSelector: React.FC<Props> = ({ rank, tier, onUpdateRank, onUpda
                     </button>
                   );
                 })}
-                {/* 修正箇所: 文字が枠に収まるように truncate（省略記号）を追加し、トラッキングを微調整 */}
                 <span className="text-[9px] md:text-[10px] text-val-gray font-bold uppercase tracking-wider text-center w-full mt-1 truncate px-1">
-                  {col.rank === 'None' ? 'UNRANKED' : col.rank}
+                  {col.rank === 'None' ? t.unranked : (t[col.rank] || col.rank)}
                 </span>
               </div>
             ))}

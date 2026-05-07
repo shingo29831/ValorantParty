@@ -17,9 +17,7 @@ interface Props {
   t: Record<string, string>;
 }
 
-export const QuickBanCarousel: React.FC<Props> = ({ 
-  title, items, category, bannedList, weights, onToggle, onUpdateWeight, t 
-}) => {
+export const QuickBanCarousel: React.FC<Props> = ({ title, items, category, bannedList, weights, onToggle, onUpdateWeight, t }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -39,7 +37,12 @@ export const QuickBanCarousel: React.FC<Props> = ({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-end px-1 mb-2">
-        <span className="text-sm md:text-base font-bold text-val-gray">{title}</span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm md:text-base font-bold text-val-gray">{title}</span>
+          <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
+            {t.clickToBanHint || "画像をクリックでBAN"}
+          </span>
+        </div>
       </div>
       <div className="relative group flex items-center">
         <button 

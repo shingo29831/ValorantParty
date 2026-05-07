@@ -48,8 +48,12 @@ export const AdvancedCategory: React.FC<Props> = ({
         <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
       </summary>
 
+      <p className="text-val-gray/50 text-xs md:text-sm italic mt-3 mb-1 tracking-wider">
+        {t.clickToBanHint || "画像をクリックでBAN"}
+      </p>
+
       {category === 'agents' && (
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-3">
           <button
             onClick={() => setAgentFilter('All')}
             className={`px-4 py-2 border rounded text-sm md:text-base font-bold transition-colors ${
@@ -58,7 +62,7 @@ export const AdvancedCategory: React.FC<Props> = ({
                 : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'
             }`}
           >
-            ALL
+            {t.all || "ALL"}
           </button>
           {ROLES.map((role) => (
             <button
@@ -70,7 +74,7 @@ export const AdvancedCategory: React.FC<Props> = ({
                   : 'border-val-gray/30 bg-val-dark text-val-gray hover:border-val-gray/60 hover:text-val-light'
               }`}
             >
-              <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5" /> {role}
+              <RoleIcon role={role} className="w-4 h-4 md:w-5 md:h-5" /> {t[role] || role}
             </button>
           ))}
         </div>

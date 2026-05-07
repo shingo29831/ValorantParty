@@ -18,7 +18,6 @@ interface Props {
   onUpdateRank: (index: number, rank: Rank) => void;
   onUpdateTier: (index: number, tier: Tier) => void;
   onToggleRole: (index: number, role: Role) => void;
-  // なぜ: App.tsxからは引き続き渡されますが、このコンポーネント内では使用しなくなります
   onToggleTeam: (index: number, team: Team) => void;
   onSwapPlayers: (dragIndex: number, dropIndex: number) => void;
 }
@@ -105,8 +104,6 @@ export const PlayerRow: React.FC<Props> = ({
         {index + 1}.
       </span>
 
-      {/* 修正箇所: ここにあった `<button onClick={() => onToggleTeam(...)}>` を削除しました */}
-
       <input
         type="text"
         value={player.name}
@@ -141,7 +138,7 @@ export const PlayerRow: React.FC<Props> = ({
                     ? 'bg-val-red/80 text-white shadow-[0_0_8px_rgba(255,70,85,0.6)]'
                     : 'bg-transparent text-val-gray hover:bg-val-gray/20 hover:text-white'
                 } ${isDisabled ? 'cursor-not-allowed opacity-80' : 'pointer-events-auto'}`}
-                title={isDisabled ? 'Random Role Enabled' : role}
+                title={isDisabled ? (t.randomRoleEnabled || 'Random Role Enabled') : (t[role] || role)}
               >
                 <RoleIcon role={role} className="w-3.5 h-3.5 md:w-5 md:h-5 drop-shadow-md" />
               </button>

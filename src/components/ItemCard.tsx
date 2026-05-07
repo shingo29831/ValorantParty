@@ -18,9 +18,7 @@ interface Props {
   className?: string;
 }
 
-export const ItemCard: React.FC<Props> = ({ 
-  item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t, className = "" 
-}) => {
+export const ItemCard: React.FC<Props> = ({ item, category, isBanned, currentWeight, totalActiveWeight, onToggleBan, onUpdateWeight, t, className = '' }) => {
   const [imgError, setImgError] = useState(false);
   const [showWeightOverlay, setShowWeightOverlay] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,17 +47,19 @@ export const ItemCard: React.FC<Props> = ({
 
   const probability = (!isBanned && totalActiveWeight > 0) 
     ? ((currentWeight / totalActiveWeight) * 100).toFixed(1) 
-    : "0.0";
+    : '0.0';
     
   const aspectClass = category === 'agents' ? 'aspect-[2/3]' : 'aspect-video';
   const bgClass = category === 'maps' ? 'bg-white' : 'bg-black/50';
+
+  const displayName = t[item] || item;
 
   return (
     <div className={`flex flex-col gap-2 group/card ${className}`}>
       <button
         onClick={onToggleBan}
         className={`relative w-full rounded overflow-hidden border-2 transition-all group ${isBanned ? 'border-val-red shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 hover:border-val-gray/60'} ${aspectClass} ${bgClass}`}
-        title={`${item} (${isBanned ? 'Banned' : 'Active'})`}
+        title={`${displayName} (${isBanned ? (t.bannedStatus || 'Banned') : 'Active'})`}
       >
         {!imgError ? (
           <img
@@ -70,14 +70,14 @@ export const ItemCard: React.FC<Props> = ({
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full text-center p-2">
-            <span className={`text-xs md:text-sm font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{item}</span>
+            <span className={`text-xs md:text-sm font-bold uppercase break-all ${isBanned ? 'text-val-gray' : 'text-val-light'}`}>{displayName}</span>
           </div>
         )}
         
         {isBanned && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/30 z-10">
             <Ban className="w-10 h-10 md:w-14 md:h-14 text-val-red drop-shadow-md mb-1" />
-            <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap tracking-wider">BANNED</span>
+            <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap tracking-wider">{t.banned || "BANNED"}</span>
           </div>
         )}
 
@@ -90,7 +90,7 @@ export const ItemCard: React.FC<Props> = ({
         
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-10 pointer-events-none text-center z-10">
           <div className={`font-bold text-sm md:text-base truncate drop-shadow-md flex items-center justify-center gap-2 ${isBanned ? 'text-val-gray line-through' : 'text-white'}`}>
-            <span>{item}</span>
+            <span>{displayName}</span>
           </div>
         </div>
       </button>

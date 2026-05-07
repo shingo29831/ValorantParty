@@ -82,7 +82,7 @@ const App: React.FC = () => {
       );
 
       if (!validationResult.isValid && validationResult.errorMessageKey) {
-        alert(t[validationResult.errorMessageKey]);
+        alert(t[validationResult.errorMessageKey] || validationResult.errorMessageKey);
         return;
       }
     }
@@ -131,18 +131,14 @@ const App: React.FC = () => {
     setPlayers(newPlayers);
   };
 
-  // 追加箇所: プレイヤーの入れ替えロジック
   const swapPlayers = (dragIndex: number, dropIndex: number) => {
     if (dragIndex === dropIndex) return;
     setPlayers(prev => {
       const newPlayers = [...prev];
       const dragPlayer = prev[dragIndex];
       const dropPlayer = prev[dropIndex];
-      
-      // fixedTeam はその位置（ドロップ先/ドラッグ元）のチーム情報を維持することで所属チームが入れ替わる
       newPlayers[dragIndex] = { ...dropPlayer, fixedTeam: dragPlayer.fixedTeam };
       newPlayers[dropIndex] = { ...dragPlayer, fixedTeam: dropPlayer.fixedTeam };
-      
       return newPlayers;
     });
   };
@@ -204,7 +200,7 @@ const App: React.FC = () => {
           )}
           <h1 className="text-lg md:text-2xl font-bold tracking-tighter uppercase italic flex items-center gap-1.5 md:gap-2">
             <Swords className="text-val-red w-4 h-4 md:w-6 md:h-6" />
-            {t.title.split(' ')[0]} <span className="text-val-red">{t.title.split(' ')[1]}</span>
+            {t.title?.split(' ')[0] || "Valorant"} <span className="text-val-red">{t.title?.split(' ')[1] || "Party"}</span>
           </h1>
         </div>
         
@@ -292,9 +288,14 @@ const App: React.FC = () => {
             </section>
 
             <section className="bg-val-blue border-l-4 border-val-gray p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-bold mb-5 uppercase italic flex items-center gap-2">
-                <Users className="text-val-gray w-6 h-6" /> {t.players}
-              </h2>
+              <div className="mb-5">
+                <h2 className="text-xl md:text-2xl font-bold uppercase italic flex items-center gap-2 mb-1">
+                  <Users className="text-val-gray w-6 h-6" /> {t.players}
+                </h2>
+                <p className="text-val-gray/50 text-xs md:text-sm italic tracking-wider">
+                  {t.dragDropHint || "プレイヤーをドラッグ&ドロップで入れ替え"}
+                </p>
+              </div>
 
               {!config.autoTeams ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-8">
@@ -368,13 +369,13 @@ const App: React.FC = () => {
 
             <section className="bg-val-dark p-4 md:p-6 border border-val-gray/20 rounded shadow-md overflow-visible">
               <h2 className="text-base md:text-lg font-bold mb-4 uppercase italic text-val-gray flex items-center gap-2">
-                <Ban className="w-5 h-5" /> Quick Bans & Weights
+                <Ban className="w-5 h-5" /> {t.quickBansWeights || "Quick Bans & Weights"}
               </h2>
               <div className="space-y-8">
                 <QuickBanCarousel title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggle={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, weight) => updateWeight('mapWeights', item, weight)} t={t} />
                 <QuickBanCarousel title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggle={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, weight) => updateWeight('agentWeights', item, weight)} t={t} />
-                <QuickBanCarousel title="MAIN WEAPONS" items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
-                <QuickBanCarousel title="SUB WEAPONS" items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.mainWeapons || "MAIN WEAPONS"} items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
+                <QuickBanCarousel title={t.subWeapons || "SUB WEAPONS"} items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggle={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, weight) => updateWeight('weaponWeights', item, weight)} t={t} />
               </div>
             </section>
           </div>
@@ -401,8 +402,8 @@ const App: React.FC = () => {
 
             <AdvancedCategory title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggleBan={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, w) => updateWeight('mapWeights', item, w)} t={t} />
             <AdvancedCategory title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggleBan={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, w) => updateWeight('agentWeights', item, w)} t={t} />
-            <AdvancedCategory title="MAIN WEAPONS" items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
-            <AdvancedCategory title="SUB WEAPONS" items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
+            <AdvancedCategory title={t.mainWeapons || "MAIN WEAPONS"} items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
+            <AdvancedCategory title={t.subWeapons || "SUB WEAPONS"} items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
             
             <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl">
               <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
@@ -411,7 +412,12 @@ const App: React.FC = () => {
               </summary>
               <div className="mt-6 flex flex-col gap-8">
                 <div>
-                  <div className="text-base font-bold text-val-gray mb-4">{t.selectMainWeapon}</div>
+                  <div className="flex items-baseline gap-2 mb-3">
+                    <span className="text-base font-bold text-val-gray">{t.selectMainWeapon}</span>
+                    <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
+                      {t.clickToBanHint || "画像をクリックでBAN"}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {MAIN_WEAPONS.map(mw => {
                       const isSelected = selectedComboMain === mw;
@@ -421,7 +427,7 @@ const App: React.FC = () => {
                           key={mw}
                           onClick={() => {
                             if (isBanned) {
-                              if (window.confirm(t.unbanConfirm.replace('{weapon}', mw))) {
+                              if (window.confirm(t.unbanConfirm.replace('{weapon}', t[mw] || mw))) {
                                 setAdvanced(prev => ({
                                   ...prev,
                                   bannedWeapons: prev.bannedWeapons.filter(w => w !== mw)
@@ -433,7 +439,7 @@ const App: React.FC = () => {
                             }
                           }}
                           className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isSelected && !isBanned ? 'border-val-red bg-val-red/10 shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/30 bg-val-dark hover:border-val-gray/60'} ${isBanned ? 'opacity-80' : ''}`}
-                          title={`Select ${mw}`}
+                          title={`Select ${t[mw] || mw}`}
                         >
                           <img 
                             src={getImagePath('weapons', mw)} 
@@ -444,12 +450,12 @@ const App: React.FC = () => {
                           {isBanned && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
                               <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
-                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus || "BANNED"}</span>
                             </div>
                           )}
                           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
                             <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
-                              {mw}
+                              {t[mw] || mw}
                             </div>
                           </div>
                         </button>
@@ -458,7 +464,12 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="text-base font-bold text-val-gray mb-4">{t.allowedSubWeapons}</div>
+                  <div className="flex items-baseline gap-2 mb-3">
+                    <span className="text-base font-bold text-val-gray">{t.allowedSubWeapons}</span>
+                    <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
+                      {t.clickToBanHint || "画像をクリックでBAN"}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {SUB_WEAPONS.map(sw => {
                       const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
@@ -468,7 +479,7 @@ const App: React.FC = () => {
                           key={sw}
                           onClick={() => {
                             if (isBanned) {
-                              if (window.confirm(t.unbanConfirm.replace('{weapon}', sw))) {
+                              if (window.confirm(t.unbanConfirm.replace('{weapon}', t[sw] || sw))) {
                                 setAdvanced(prev => {
                                   const newBannedWeapons = prev.bannedWeapons.filter(w => w !== sw);
                                   const current = prev.weaponCombinations[selectedComboMain] || [];
@@ -491,7 +502,7 @@ const App: React.FC = () => {
                           {isBanned ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
                               <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
-                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus}</span>
+                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus || "BANNED"}</span>
                             </div>
                           ) : !isAllowed && (
                             <div className="absolute inset-0 flex items-center justify-center bg-red-900/30 z-10">
@@ -501,7 +512,7 @@ const App: React.FC = () => {
 
                           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
                             <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
-                                {sw}
+                                {t[sw] || sw}
                             </div>
                           </div>
                         </button>
@@ -527,7 +538,7 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-val-dark via-val-dark/70 to-transparent pointer-events-none"></div>
                 <div className="absolute inset-y-0 left-0 flex flex-col justify-center p-4 md:p-8 pointer-events-none">
                   <span className="text-[10px] md:text-sm text-val-gray font-bold uppercase tracking-widest mb-1">{t.map}</span>
-                  <span className="text-2xl md:text-5xl text-white font-bold uppercase tracking-tighter italic drop-shadow-md">{result.map}</span>
+                  <span className="text-2xl md:text-5xl text-white font-bold uppercase tracking-tighter italic drop-shadow-md">{t[result.map] || result.map}</span>
                 </div>
               </div>
             )}
@@ -548,12 +559,12 @@ const App: React.FC = () => {
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500/50 to-transparent"></div>
                 </div>
                 <div className="grid grid-cols-5 gap-2 relative z-10 flex-1 min-h-0">
-                  {defenders.map(p => <PlayerCard key={p.id} player={p} isDefender={true} />)}
+                  {defenders.map(p => <PlayerCard key={p.id} player={p} isDefender={true} t={t} />)}
                 </div>
               </div>
 
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none flex flex-col items-center gap-1">
-                <div className="bg-val-dark px-5 py-2 border-2 border-val-red text-val-red font-bold text-xl md:text-2xl italic shadow-2xl skew-x-[-10deg]"><div className="skew-x-[10deg]">VS</div></div>
+                <div className="bg-val-dark px-5 py-2 border-2 border-val-red text-val-red font-bold text-xl md:text-2xl italic shadow-2xl skew-x-[-10deg]"><div className="skew-x-[10deg]">{t.vs || "VS"}</div></div>
               </div>
 
               <div className="flex-1 bg-red-900/10 border-t-2 border-val-red p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
@@ -571,7 +582,7 @@ const App: React.FC = () => {
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-val-red/50 to-transparent"></div>
                 </div>
                 <div className="grid grid-cols-5 gap-2 relative z-10 flex-1 min-h-0">
-                  {attackers.map(p => <PlayerCard key={p.id} player={p} isDefender={false} />)}
+                  {attackers.map(p => <PlayerCard key={p.id} player={p} isDefender={false} t={t} />)}
                 </div>
               </div>
             </div>

@@ -10,9 +10,10 @@ import { getImagePath, getRankImagePath } from '../utils/imageUtils';
 interface Props {
   player: PlayerResult;
   isDefender: boolean;
+  t: Record<string, string>;
 }
 
-export const PlayerCard: React.FC<Props> = ({ player, isDefender }) => {
+export const PlayerCard: React.FC<Props> = ({ player, isDefender, t }) => {
   const [agentImgError, setAgentImgError] = useState(false);
   const borderColor = isDefender ? 'border-blue-500/50' : 'border-val-red/50';
   const hoverColor = isDefender ? 'hover:border-blue-400' : 'hover:border-red-400';
@@ -25,7 +26,7 @@ export const PlayerCard: React.FC<Props> = ({ player, isDefender }) => {
         {player.rank !== 'None' && (
           <div className="flex items-center gap-1">
             <span className="text-[10px] md:text-xs font-bold bg-val-gray/20 px-1.5 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
-              {player.rank === 'Radiant' ? player.rank : `${player.rank} ${player.tier}`}
+              {player.rank === 'Radiant' ? (t[player.rank] || player.rank) : `${t[player.rank] || player.rank} ${player.tier}`}
             </span>
           </div>
         )}
@@ -36,13 +37,13 @@ export const PlayerCard: React.FC<Props> = ({ player, isDefender }) => {
           {player.mainWeapon && (
             <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
               <img src={getImagePath('weapons', player.mainWeapon)} alt={player.mainWeapon} className="w-full h-full object-contain p-0.5" onError={(e) => e.currentTarget.style.display = 'none'} />
-              <span className="absolute bottom-0 left-0 bg-black/70 text-[9px] md:text-[11px] px-1 text-val-light font-bold truncate max-w-full">{player.mainWeapon}</span>
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[9px] md:text-[11px] px-1 text-val-light font-bold truncate max-w-full">{t[player.mainWeapon] || player.mainWeapon}</span>
             </div>
           )}
           {player.subWeapon && (
             <div className="w-full aspect-video bg-black/40 rounded-sm overflow-hidden relative flex items-center justify-center">
               <img src={getImagePath('weapons', player.subWeapon)} alt={player.subWeapon} className="w-full h-full object-contain p-0.5" onError={(e) => e.currentTarget.style.display = 'none'} />
-              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[10px] px-1 text-val-light font-bold truncate max-w-full">{player.subWeapon}</span>
+              <span className="absolute bottom-0 left-0 bg-black/70 text-[8px] md:text-[10px] px-1 text-val-light font-bold truncate max-w-full">{t[player.subWeapon] || player.subWeapon}</span>
             </div>
           )}
         </div>
@@ -71,11 +72,14 @@ export const PlayerCard: React.FC<Props> = ({ player, isDefender }) => {
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-yellow-400 font-bold text-sm md:text-base uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{player.agent}</span>
+                <span className="text-yellow-400 font-bold text-sm md:text-base uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{t[player.agent] || player.agent}</span>
               </div>
             )}
             {player.role && (
-              <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-val-dark/80 p-1 md:p-1.5 rounded-full border border-val-gray/30">
+              <div 
+                className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-val-dark/80 p-1 md:p-1.5 rounded-full border border-val-gray/30"
+                title={t[player.role] || player.role}
+              >
                 <RoleIcon role={player.role} className="w-4 h-4 md:w-5 md:h-5 text-white opacity-90 drop-shadow-md" />
               </div>
             )}
@@ -85,7 +89,7 @@ export const PlayerCard: React.FC<Props> = ({ player, isDefender }) => {
             {player.role && (
               <>
                 <RoleIcon role={player.role} className="w-12 h-12 md:w-20 md:h-20 text-val-light opacity-80 drop-shadow-lg" />
-                <span className="text-val-light font-bold text-sm md:text-base uppercase tracking-widest">{player.role}</span>
+                <span className="text-val-light font-bold text-sm md:text-base uppercase tracking-widest">{t[player.role] || player.role}</span>
               </>
             )}
           </div>
