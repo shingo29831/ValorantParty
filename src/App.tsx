@@ -38,13 +38,12 @@ const INITIAL_COMBINATIONS = MAIN_WEAPONS.reduce((acc, mw) => {
 
 type ScreenState = 'setup' | 'advanced' | 'result';
 type Language = 'ja' | 'en';
-// 追加: 詳細設定のタブ状態型
 type AdvancedTab = 'adv-rank' | 'adv-maps' | 'adv-agents' | 'adv-main-weapons' | 'adv-sub-weapons' | 'adv-combos';
 
 const App: React.FC = () => {
   const [screen, setScreen] = useState<ScreenState>('setup');
   const [lang, setLang] = useState<Language>('ja');
-  const [activeTab, setActiveTab] = useState<AdvancedTab>('adv-rank'); // 追加: アクティブなタブ状態
+  const [activeTab, setActiveTab] = useState<AdvancedTab>('adv-rank');
   const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
   
   const [config, setConfig] = useState<RandomizerConfig>({
@@ -398,9 +397,9 @@ const App: React.FC = () => {
             </h2>
 
             {/* タブメニュー（Sticky） */}
-            <nav className="sticky top-[52px] md:top-[60px] z-30 bg-val-dark/95 backdrop-blur-md border-y border-val-gray/30 py-2.5 mb-6 -mx-2 px-2 md:-mx-4 md:px-4 shadow-lg">
-              <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden items-center">
-                <Menu className="w-5 h-5 text-val-gray shrink-0 mr-1" />
+            <nav className="sticky top-[52px] md:top-[60px] z-30 bg-val-dark/95 backdrop-blur-md border-y border-val-gray/30 py-3 md:py-4 mb-6 -mx-2 px-2 md:-mx-4 md:px-4 shadow-lg">
+              <div className="flex gap-2 md:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden items-center pb-1">
+                <Menu className="w-6 h-6 md:w-8 md:h-8 text-val-gray shrink-0 mr-1 md:mr-2" />
                 {[
                   { id: 'adv-rank', label: t.maxRankDifference },
                   { id: 'adv-maps', label: t.mapSettings },
@@ -412,9 +411,9 @@ const App: React.FC = () => {
                   <button
                     key={menu.id}
                     onClick={() => setActiveTab(menu.id as AdvancedTab)}
-                    className={`px-3 py-1.5 rounded border transition-colors whitespace-nowrap text-xs md:text-sm font-bold tracking-wider shrink-0 ${
+                    className={`px-4 py-2 md:px-6 md:py-2.5 rounded border transition-colors whitespace-nowrap text-sm md:text-base font-bold tracking-wider shrink-0 ${
                       activeTab === menu.id
-                        ? 'bg-val-red text-white border-val-red shadow-[0_0_8px_rgba(255,70,85,0.6)]'
+                        ? 'bg-val-red text-white border-val-red shadow-[0_0_12px_rgba(255,70,85,0.6)]'
                         : 'bg-black/40 hover:bg-val-red/80 text-val-gray hover:text-white border-val-gray/30'
                     }`}
                   >
