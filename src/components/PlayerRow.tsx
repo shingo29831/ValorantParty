@@ -18,6 +18,7 @@ interface Props {
   onUpdateRank: (index: number, rank: Rank) => void;
   onUpdateTier: (index: number, tier: Tier) => void;
   onToggleRole: (index: number, role: Role) => void;
+  // なぜ: App.tsxからは引き続き渡されますが、このコンポーネント内では使用しなくなります
   onToggleTeam: (index: number, team: Team) => void;
   onSwapPlayers: (dragIndex: number, dropIndex: number) => void;
 }
@@ -31,14 +32,11 @@ export const PlayerRow: React.FC<Props> = ({
   onUpdateRank,
   onUpdateTier,
   onToggleRole,
-  onToggleTeam,
   onSwapPlayers,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  // なぜ: 子要素にマウスが乗った際の誤検知(フリッカー)を防ぐためのカウンター
   const dragCounter = useRef(0);
 
-  // DnD: ドラッグ開始時
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('text/plain', index.toString());
     e.dataTransfer.effectAllowed = 'move';
@@ -47,20 +45,17 @@ export const PlayerRow: React.FC<Props> = ({
     }, 0);
   };
 
-  // DnD: ドラッグ終了時
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     if (e.target instanceof HTMLElement) e.target.style.opacity = '1';
     dragCounter.current = 0;
     setIsDragOver(false);
   };
 
-  // DnD: 要素上にホバーした時
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); // ドロップを許可
+    e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
 
-  // DnD: ホバーに入った時（ハイライト）
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dragCounter.current += 1;
@@ -69,7 +64,6 @@ export const PlayerRow: React.FC<Props> = ({
     }
   };
 
-  // DnD: ホバーから出た時
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dragCounter.current -= 1;
@@ -78,7 +72,6 @@ export const PlayerRow: React.FC<Props> = ({
     }
   };
 
-  // DnD: ドロップ時に入れ替え処理を実行
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dragCounter.current = 0;
@@ -112,17 +105,7 @@ export const PlayerRow: React.FC<Props> = ({
         {index + 1}.
       </span>
 
-      {!config.autoTeams && (
-        <button
-          onClick={() => onToggleTeam(index, player.fixedTeam === 'Team 1' ? 'Team 2' : 'Team 1')}
-          className={`p-1.5 text-xs md:text-sm font-bold w-8 md:w-10 rounded shrink-0 transition-colors ${
-            player.fixedTeam === 'Team 1' ? 'bg-blue-500 text-white' : 'bg-red-500 text-white'
-          }`}
-          title="Click to change team"
-        >
-          {player.fixedTeam === 'Team 1' ? 'T1' : 'T2'}
-        </button>
-      )}
+      {/* 修正箇所: ここにあった `<button onClick={() => onToggleTeam(...)}>` を削除しました */}
 
       <input
         type="text"
