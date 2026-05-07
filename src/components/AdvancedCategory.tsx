@@ -1,6 +1,6 @@
 // src/components/AdvancedCategory.tsx
 // AI Role: 詳細設定のカテゴリ表示UIコンポーネント
-// 役割: アイテムの一覧をアコーディオン形式で表示し、エージェントの場合はロールフィルターを提供する
+// 役割: アイテムの一覧を表示し、エージェントの場合はロールフィルターを提供する
 
 import React, { useState } from 'react';
 import { Role } from '../types';
@@ -42,14 +42,13 @@ export const AdvancedCategory: React.FC<Props> = ({
   );
 
   return (
-    <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-4 md:mb-6 shadow-xl">
-      <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
+    <div className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray mb-4 md:mb-6 shadow-xl animate-fade-in">
+      <div className="font-bold text-xl md:text-2xl flex justify-between items-center outline-none">
         <div className="flex items-center gap-3">{title}</div>
-        <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
-      </summary>
+      </div>
 
       <p className="text-val-gray/50 text-xs md:text-sm italic mt-3 mb-1 tracking-wider">
-        {t.clickToBanHint || "画像をクリックでBAN"}
+        {t.clickToBanHint || '画像をクリックでBAN'}
       </p>
 
       {category === 'agents' && (
@@ -95,6 +94,6 @@ export const AdvancedCategory: React.FC<Props> = ({
           />
         ))}
       </div>
-    </details>
+    </div>
   );
 };

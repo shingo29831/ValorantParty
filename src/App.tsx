@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { generateMatch, getRankWeight } from './logic/randomizer';
 import { validateTeamCreation } from './logic/validator';
 import { Player, RandomizerConfig, AdvancedConfig, Rank, Tier, Role, Team, MatchResult } from './types';
-import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban } from 'lucide-react';
+import { Swords, Shield, Settings2, Users, ArrowLeft, RefreshCw, Globe, SlidersHorizontal, Ban, Menu } from 'lucide-react';
 import { MAPS, MAIN_WEAPONS, SUB_WEAPONS, AGENTS } from './constants/valorant';
 import { PlayerCard } from './components/PlayerCard';
 import { QuickBanCarousel } from './components/QuickBanCarousel';
@@ -38,10 +38,13 @@ const INITIAL_COMBINATIONS = MAIN_WEAPONS.reduce((acc, mw) => {
 
 type ScreenState = 'setup' | 'advanced' | 'result';
 type Language = 'ja' | 'en';
+// 追加: 詳細設定のタブ状態型
+type AdvancedTab = 'adv-rank' | 'adv-maps' | 'adv-agents' | 'adv-main-weapons' | 'adv-sub-weapons' | 'adv-combos';
 
 const App: React.FC = () => {
   const [screen, setScreen] = useState<ScreenState>('setup');
   const [lang, setLang] = useState<Language>('ja');
+  const [activeTab, setActiveTab] = useState<AdvancedTab>('adv-rank'); // 追加: アクティブなタブ状態
   const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
   
   const [config, setConfig] = useState<RandomizerConfig>({
@@ -193,8 +196,8 @@ const App: React.FC = () => {
   const attackerWeight = attackers.reduce((sum, p) => sum + getRankWeight(p.rank, p.tier), 0);
 
   return (
-    <div className="min-h-screen bg-val-dark text-val-light font-sans selection:bg-val-red selection:text-white flex flex-col">
-      <header className="border-b border-val-gray/30 p-2 md:p-3 flex justify-between items-center bg-val-dark sticky top-0 z-30 shadow-md shrink-0">
+    <div className="min-h-screen bg-val-dark text-val-light font-sans selection:bg-val-red selection:text-white flex flex-col relative">
+      <header className="border-b border-val-gray/30 p-2 md:p-3 flex justify-between items-center bg-val-dark sticky top-0 z-40 shadow-md shrink-0">
         <div className="flex items-center gap-2">
           {screen !== 'setup' && (
             <button 
@@ -243,7 +246,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-[100rem] w-full mx-auto p-2 md:p-4 flex flex-col min-h-0">
+      <main className="flex-1 max-w-[100rem] w-full mx-auto p-2 md:p-4 flex flex-col min-h-0 relative">
         
         {screen === 'setup' && (
           <div className="space-y-4 md:space-y-6 animate-slide-up overflow-y-auto pb-10">
@@ -253,7 +256,7 @@ const App: React.FC = () => {
                   <Settings2 className="text-val-red w-6 h-6" /> {t.rules}
                 </h2>
                 <button 
-                  onClick={() => setScreen('advanced')}
+                  onClick={() => { setScreen('advanced'); setActiveTab('adv-rank'); window.scrollTo({ top: 0 }); }}
                   className="bg-val-gray/20 hover:bg-val-gray/40 text-val-light px-4 py-2 rounded text-sm md:text-base flex items-center gap-2 transition-colors border border-val-gray/30"
                 >
                   <SlidersHorizontal className="w-5 h-5 text-val-red" /> {t.advancedSettings}
@@ -389,146 +392,188 @@ const App: React.FC = () => {
         )}
 
         {screen === 'advanced' && (
-          <div className="animate-slide-up overflow-y-auto pb-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8 uppercase italic flex items-center gap-3 text-val-red">
+          <div className="animate-slide-up overflow-visible pb-10">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2 uppercase italic flex items-center gap-3 text-val-red">
               <SlidersHorizontal className="w-8 h-8" /> {t.advancedSettings}
             </h2>
 
-            <div className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl flex items-center justify-between">
-              <span className="font-bold text-base md:text-xl">{t.maxRankDifference}</span>
-              <div className="flex items-center bg-black/40 px-3 py-1.5 rounded border border-val-gray/30 focus-within:border-val-red">
-                <input
-                  type="number"
-                  min="0"
-                  value={advanced.maxRankWeightDifference}
-                  onChange={(e) => setAdvanced(prev => ({ ...prev, maxRankWeightDifference: Number(e.target.value) }))}
-                  className="bg-transparent text-val-light text-base md:text-lg w-16 text-center outline-none appearance-none [-moz-appearance:textfield]"
-                />
+            {/* タブメニュー（Sticky） */}
+            <nav className="sticky top-[52px] md:top-[60px] z-30 bg-val-dark/95 backdrop-blur-md border-y border-val-gray/30 py-2.5 mb-6 -mx-2 px-2 md:-mx-4 md:px-4 shadow-lg">
+              <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden items-center">
+                <Menu className="w-5 h-5 text-val-gray shrink-0 mr-1" />
+                {[
+                  { id: 'adv-rank', label: t.maxRankDifference },
+                  { id: 'adv-maps', label: t.mapSettings },
+                  { id: 'adv-agents', label: t.agentSettings },
+                  { id: 'adv-main-weapons', label: t.mainWeapons || 'MAIN WEAPONS' },
+                  { id: 'adv-sub-weapons', label: t.subWeapons || 'SUB WEAPONS' },
+                  { id: 'adv-combos', label: t.weaponCombinations }
+                ].map(menu => (
+                  <button
+                    key={menu.id}
+                    onClick={() => setActiveTab(menu.id as AdvancedTab)}
+                    className={`px-3 py-1.5 rounded border transition-colors whitespace-nowrap text-xs md:text-sm font-bold tracking-wider shrink-0 ${
+                      activeTab === menu.id
+                        ? 'bg-val-red text-white border-val-red shadow-[0_0_8px_rgba(255,70,85,0.6)]'
+                        : 'bg-black/40 hover:bg-val-red/80 text-val-gray hover:text-white border-val-gray/30'
+                    }`}
+                  >
+                    {menu.label}
+                  </button>
+                ))}
               </div>
-            </div>
+            </nav>
 
-            <AdvancedCategory title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggleBan={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, w) => updateWeight('mapWeights', item, w)} t={t} />
-            <AdvancedCategory title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggleBan={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, w) => updateWeight('agentWeights', item, w)} t={t} />
-            <AdvancedCategory title={t.mainWeapons || 'MAIN WEAPONS'} items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
-            <AdvancedCategory title={t.subWeapons || 'SUB WEAPONS'} items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
+            {/* 以下、選択されたタブのコンテンツのみを表示 */}
+            {activeTab === 'adv-rank' && (
+              <div className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray mb-6 shadow-xl flex items-center justify-between animate-fade-in">
+                <span className="font-bold text-base md:text-xl">{t.maxRankDifference}</span>
+                <div className="flex items-center bg-black/40 px-3 py-1.5 rounded border border-val-gray/30 focus-within:border-val-red">
+                  <input
+                    type="number"
+                    min="0"
+                    value={advanced.maxRankWeightDifference}
+                    onChange={(e) => setAdvanced(prev => ({ ...prev, maxRankWeightDifference: Number(e.target.value) }))}
+                    className="bg-transparent text-val-light text-base md:text-lg w-16 text-center outline-none appearance-none [-moz-appearance:textfield]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'adv-maps' && (
+              <AdvancedCategory title={t.mapSettings} items={MAPS} category="maps" bannedList={advanced.bannedMaps} weights={advanced.mapWeights} onToggleBan={(item) => toggleBan('bannedMaps', item)} onUpdateWeight={(item, w) => updateWeight('mapWeights', item, w)} t={t} />
+            )}
             
-            <details className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray group mb-6 shadow-xl">
-              <summary className="font-bold text-xl md:text-2xl cursor-pointer flex justify-between items-center outline-none">
-                {t.weaponCombinations}
-                <span className="text-val-gray group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div className="mt-6 flex flex-col gap-8">
-                <div>
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-base font-bold text-val-gray">{t.selectMainWeapon}</span>
-                    <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
-                      {t.clickToBanHint || '画像をクリックでBAN'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                    {MAIN_WEAPONS.map(mw => {
-                      const isSelected = selectedComboMain === mw;
-                      const isBanned = advanced.bannedWeapons.includes(mw);
-                      return (
-                        <button
-                          key={mw}
-                          onClick={() => {
-                            if (isBanned) {
-                              if (window.confirm(t.unbanConfirm.replace('{weapon}', t[mw] || mw))) {
-                                setAdvanced(prev => ({
-                                  ...prev,
-                                  bannedWeapons: prev.bannedWeapons.filter(w => w !== mw)
-                                }));
+            {activeTab === 'adv-agents' && (
+              <AdvancedCategory title={t.agentSettings} items={AGENTS} category="agents" bannedList={advanced.bannedAgents} weights={advanced.agentWeights} onToggleBan={(item) => toggleBan('bannedAgents', item)} onUpdateWeight={(item, w) => updateWeight('agentWeights', item, w)} t={t} />
+            )}
+            
+            {activeTab === 'adv-main-weapons' && (
+              <AdvancedCategory title={t.mainWeapons || 'MAIN WEAPONS'} items={MAIN_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
+            )}
+            
+            {activeTab === 'adv-sub-weapons' && (
+              <AdvancedCategory title={t.subWeapons || 'SUB WEAPONS'} items={SUB_WEAPONS} category="weapons" bannedList={advanced.bannedWeapons} weights={advanced.weaponWeights} onToggleBan={(item) => toggleBan('bannedWeapons', item)} onUpdateWeight={(item, w) => updateWeight('weaponWeights', item, w)} t={t} />
+            )}
+            
+            {activeTab === 'adv-combos' && (
+              <div className="bg-black/30 p-4 md:p-6 border-l-4 border-val-gray mb-6 shadow-xl animate-fade-in">
+                <div className="font-bold text-xl md:text-2xl flex justify-between items-center outline-none">
+                  {t.weaponCombinations}
+                </div>
+                <div className="mt-6 flex flex-col gap-8">
+                  <div>
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className="text-base font-bold text-val-gray">{t.selectMainWeapon}</span>
+                      <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
+                        {t.clickToBanHint || '画像をクリックでBAN'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                      {MAIN_WEAPONS.map(mw => {
+                        const isSelected = selectedComboMain === mw;
+                        const isBanned = advanced.bannedWeapons.includes(mw);
+                        return (
+                          <button
+                            key={mw}
+                            onClick={() => {
+                              if (isBanned) {
+                                if (window.confirm(t.unbanConfirm.replace('{weapon}', t[mw] || mw))) {
+                                  setAdvanced(prev => ({
+                                    ...prev,
+                                    bannedWeapons: prev.bannedWeapons.filter(w => w !== mw)
+                                  }));
+                                  setSelectedComboMain(mw);
+                                }
+                              } else {
                                 setSelectedComboMain(mw);
                               }
-                            } else {
-                              setSelectedComboMain(mw);
-                            }
-                          }}
-                          className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isSelected && !isBanned ? 'border-val-red bg-val-red/10 shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/30 bg-val-dark hover:border-val-gray/60'} ${isBanned ? 'opacity-80' : ''}`}
-                          title={`Select ${t[mw] || mw}`}
-                        >
-                          <img 
-                            src={getImagePath('weapons', mw)} 
-                            alt={mw} 
-                            className={`w-full h-full object-contain p-2 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
-                            onError={(e) => e.currentTarget.style.display = 'none'}
-                          />
-                          {isBanned && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
-                              <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
-                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus || 'BANNED'}</span>
+                            }}
+                            className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isSelected && !isBanned ? 'border-val-red bg-val-red/10 shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/30 bg-val-dark hover:border-val-gray/60'} ${isBanned ? 'opacity-80' : ''}`}
+                            title={`Select ${t[mw] || mw}`}
+                          >
+                            <img 
+                              src={getImagePath('weapons', mw)} 
+                              alt={mw} 
+                              className={`w-full h-full object-contain p-2 transition-all duration-300 ${isSelected && !isBanned ? 'opacity-100 scale-110' : 'opacity-60 group-hover:opacity-100'} ${isBanned ? 'grayscale opacity-40' : ''}`} 
+                              onError={(e) => e.currentTarget.style.display = 'none'}
+                            />
+                            {isBanned && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
+                                <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
+                                <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus || 'BANNED'}</span>
+                              </div>
+                            )}
+                            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
+                              <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
+                                {t[mw] || mw}
+                              </div>
                             </div>
-                          )}
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
-                            <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isSelected && !isBanned ? 'text-white' : 'text-val-gray'} ${isBanned ? 'line-through' : ''}`}>
-                              {t[mw] || mw}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-base font-bold text-val-gray">{t.allowedSubWeapons}</span>
-                    <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
-                      {t.clickToBanHint || '画像をクリックでBAN'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                    {SUB_WEAPONS.map(sw => {
-                      const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
-                      const isBanned = advanced.bannedWeapons.includes(sw);
-                      return (
-                        <button
-                          key={sw}
-                          onClick={() => {
-                            if (isBanned) {
-                              if (window.confirm(t.unbanConfirm.replace('{weapon}', t[sw] || sw))) {
+                  <div>
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className="text-base font-bold text-val-gray">{t.allowedSubWeapons}</span>
+                      <span className="text-[10px] md:text-xs text-val-gray/50 italic tracking-wider">
+                        {t.clickToBanHint || '画像をクリックでBAN'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                      {SUB_WEAPONS.map(sw => {
+                        const isAllowed = advanced.weaponCombinations[selectedComboMain]?.includes(sw) ?? true;
+                        const isBanned = advanced.bannedWeapons.includes(sw);
+                        return (
+                          <button
+                            key={sw}
+                            onClick={() => {
+                              if (isBanned) {
+                                if (window.confirm(t.unbanConfirm.replace('{weapon}', t[sw] || sw))) {
+                                  setAdvanced(prev => {
+                                    const newBannedWeapons = prev.bannedWeapons.filter(w => w !== sw);
+                                    const current = prev.weaponCombinations[selectedComboMain] || [];
+                                    const updated = current.includes(sw) ? current : [...current, sw];
+                                    return { ...prev, bannedWeapons: newBannedWeapons, weaponCombinations: { ...prev.weaponCombinations, [selectedComboMain]: updated } };
+                                  });
+                                }
+                              } else {
                                 setAdvanced(prev => {
-                                  const newBannedWeapons = prev.bannedWeapons.filter(w => w !== sw);
                                   const current = prev.weaponCombinations[selectedComboMain] || [];
-                                  const updated = current.includes(sw) ? current : [...current, sw];
-                                  return { ...prev, bannedWeapons: newBannedWeapons, weaponCombinations: { ...prev.weaponCombinations, [selectedComboMain]: updated } };
+                                  const updated = current.includes(sw) ? current.filter(w => w !== sw) : [...current, sw];
+                                  return { ...prev, weaponCombinations: { ...prev.weaponCombinations, [selectedComboMain]: updated } };
                                 });
                               }
-                            } else {
-                              setAdvanced(prev => {
-                                const current = prev.weaponCombinations[selectedComboMain] || [];
-                                const updated = current.includes(sw) ? current.filter(w => w !== sw) : [...current, sw];
-                                return { ...prev, weaponCombinations: { ...prev.weaponCombinations, [selectedComboMain]: updated } };
-                              });
-                            }
-                          }}
-                          className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isAllowed && !isBanned ? 'border-val-red bg-val-dark shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 bg-black/80'}`}
-                        >
-                          <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-2 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
-                          
-                          {isBanned ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
-                              <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
-                              <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus || 'BANNED'}</span>
-                            </div>
-                          ) : !isAllowed && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-red-900/30 z-10">
-                              <Ban className="w-10 h-10 md:w-12 md:h-12 text-val-red drop-shadow-md" />
-                            </div>
-                          )}
+                            }}
+                            className={`relative w-full aspect-video rounded overflow-hidden border-2 transition-all ${isAllowed && !isBanned ? 'border-val-red bg-val-dark shadow-[0_0_8px_rgba(255,70,85,0.4)]' : 'border-val-gray/20 bg-black/80'}`}
+                          >
+                            <img src={getImagePath('weapons', sw)} alt={sw} className={`w-full h-full object-contain p-2 transition-transform ${isAllowed && !isBanned ? 'opacity-100 group-hover:scale-110' : 'grayscale opacity-40'}`} onError={(e) => e.currentTarget.style.display = 'none'} />
+                            
+                            {isBanned ? (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/60 z-10">
+                                <Ban className="w-8 h-8 md:w-10 md:h-10 text-val-red drop-shadow-md mb-1" />
+                                <span className="text-xs md:text-sm text-white font-bold leading-tight px-1 whitespace-nowrap">{t.bannedStatus || 'BANNED'}</span>
+                              </div>
+                            ) : !isAllowed && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-red-900/30 z-10">
+                                <Ban className="w-10 h-10 md:w-12 md:h-12 text-val-red drop-shadow-md" />
+                              </div>
+                            )}
 
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
-                            <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
-                                {t[sw] || sw}
+                            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/70 to-transparent p-2 pt-6 pointer-events-none text-center z-20">
+                              <div className={`font-bold text-sm md:text-base truncate drop-shadow-md ${isAllowed && !isBanned ? 'text-white' : 'text-val-gray line-through'}`}>
+                                  {t[sw] || sw}
+                              </div>
                             </div>
-                          </div>
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </details>
+            )}
           </div>
         )}
 
