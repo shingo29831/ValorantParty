@@ -20,16 +20,10 @@ export const PlayerCard: React.FC<Props> = ({ player, isDefender, t }) => {
   const weaponCount = (player.mainWeapon ? 1 : 0) + (player.subWeapon ? 1 : 0);
 
   return (
-    <div className={`bg-black/60 border ${borderColor} ${hoverColor} transition-colors flex flex-col h-full overflow-hidden relative group`}>
+    <div className={`bg-black/60 border ${borderColor} ${hoverColor} transition-colors flex flex-col overflow-hidden relative group`}>
+      
       <div className="p-1.5 md:p-2 flex justify-between items-center bg-val-dark z-10 border-b border-val-gray/20">
         <div className="font-bold text-sm md:text-base truncate pr-1 text-white">{player.name}</div>
-        {player.rank !== 'None' && (
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] md:text-xs font-bold bg-val-gray/20 px-1.5 py-0.5 text-val-light shrink-0 rounded whitespace-nowrap">
-              {player.rank === 'Radiant' ? (t[player.rank] || player.rank) : `${t[player.rank] || player.rank} ${player.tier}`}
-            </span>
-          </div>
-        )}
       </div>
 
       {weaponCount > 0 && (
@@ -49,52 +43,64 @@ export const PlayerCard: React.FC<Props> = ({ player, isDefender, t }) => {
         </div>
       )}
 
-      <div className="flex-1 w-full relative mt-auto bg-black/20 overflow-hidden flex items-end justify-center aspect-[2/3]">
-        {player.rank !== 'None' && (
-          <div className="absolute top-1 left-1 md:top-2 md:left-2 z-20 pointer-events-none">
-            <img 
-              src={getRankImagePath(player.rank, player.tier)} 
-              alt={player.rank} 
-              className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-lg"
-              onError={(e) => e.currentTarget.style.display = 'none'}
-            />
-          </div>
-        )}
-        
-        {player.agent ? (
-          <>
-            {!agentImgError ? (
-              <img
-                src={getImagePath('agents', player.agent)}
-                alt={player.agent}
-                className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                onError={() => setAgentImgError(true)}
+      {player.agent && (
+        <div className="w-full relative bg-black/20 overflow-hidden flex items-end justify-center aspect-[2/3]">
+          
+          {player.rank !== 'None' && (
+            <div className="absolute top-1 left-1 md:top-2 md:left-2 z-20 pointer-events-none">
+              <img 
+                src={getRankImagePath(player.rank, player.tier)} 
+                alt={player.rank} 
+                className="w-8 h-8 md:w-12 md:h-12 object-contain drop-shadow-lg"
+                onError={(e) => e.currentTarget.style.display = 'none'}
               />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-yellow-400 font-bold text-sm md:text-base uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{t[player.agent] || player.agent}</span>
-              </div>
-            )}
-            {player.role && (
-              <div 
-                className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-val-dark/80 p-1 md:p-1.5 rounded-full border border-val-gray/30"
-                title={t[player.role] || player.role}
-              >
-                <RoleIcon role={player.role} className="w-4 h-4 md:w-5 md:h-5 text-white opacity-90 drop-shadow-md" />
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 md:gap-4 bg-val-dark/50">
-            {player.role && (
-              <>
-                <RoleIcon role={player.role} className="w-12 h-12 md:w-20 md:h-20 text-val-light opacity-80 drop-shadow-lg" />
-                <span className="text-val-light font-bold text-sm md:text-base uppercase tracking-widest">{t[player.role] || player.role}</span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+          
+          {!agentImgError ? (
+            <img
+              src={getImagePath('agents', player.agent)}
+              alt={player.agent}
+              className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+              onError={() => setAgentImgError(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-yellow-400 font-bold text-sm md:text-base uppercase tracking-widest bg-black/50 px-2 py-1 rounded">{t[player.agent] || player.agent}</span>
+            </div>
+          )}
+
+          {player.role && (
+            <div 
+              className="absolute top-1 right-1 md:top-2 md:right-2 bg-val-dark/80 p-1 md:p-1.5 rounded-full border border-val-gray/30 z-20"
+              title={t[player.role] || player.role}
+            >
+              <RoleIcon role={player.role} className="w-4 h-4 md:w-5 md:h-5 text-white opacity-90 drop-shadow-md" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {!player.agent && (player.role || player.rank !== 'None') && (
+        <div className="p-1.5 md:p-2 flex gap-1.5 md:gap-2 bg-val-dark/40 mt-auto">
+          {player.rank !== 'None' && (
+            <div className="flex-1 bg-black/50 border border-val-gray/30 rounded flex flex-col items-center justify-center p-1.5 md:p-2 gap-1 min-w-0">
+              <img src={getRankImagePath(player.rank, player.tier)} alt={player.rank} className="w-6 h-6 md:w-8 md:h-8 object-contain drop-shadow-md" />
+              <span className="text-[8px] md:text-[9px] text-val-light font-bold truncate w-full text-center">
+                {player.rank === 'Radiant' ? (t[player.rank] || player.rank) : `${t[player.rank] || player.rank} ${player.tier}`}
+              </span>
+            </div>
+          )}
+          {player.role && (
+            <div className="flex-1 bg-black/50 border border-val-gray/30 rounded flex flex-col items-center justify-center p-1.5 md:p-2 gap-1 min-w-0">
+              <RoleIcon role={player.role} className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-md" />
+              <span className="text-[8px] md:text-[9px] text-val-light font-bold truncate w-full text-center">
+                {t[player.role] || player.role}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -89,7 +89,6 @@ const App: React.FC = () => {
 
     const matchResult = generateMatch(activePlayers, config, advanced);
 
-    // ランダムエージェントとランダムロールが両方無効な場合はロール情報を削除する
     if (!config.restrictAgents && !config.restrictRoles) {
       matchResult.team1.forEach(p => { p.role = undefined; });
       matchResult.team2.forEach(p => { p.role = undefined; });
@@ -534,7 +533,7 @@ const App: React.FC = () => {
         )}
 
         {screen === 'result' && result && (
-          <div className="flex flex-col gap-3 md:gap-4 animate-slide-up flex-1 relative min-h-0">
+          <div className="flex flex-col gap-6 md:gap-8 animate-slide-up flex-1 relative min-h-0 pb-4">
             {result.map && (
               <div className="relative w-full h-24 md:h-40 shrink-0 rounded overflow-hidden border border-val-gray/30 shadow-lg bg-val-dark">
                 <img 
@@ -551,10 +550,10 @@ const App: React.FC = () => {
               </div>
             )}
 
-            <div className="flex-1 flex flex-col relative min-h-0 gap-3 md:gap-4">
-              <div className="flex-1 bg-blue-900/10 border-t-2 border-blue-500 p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
+            <div className="flex-1 flex flex-col relative min-h-0 gap-6 md:gap-8">
+              <div className="flex-1 bg-blue-900/10 border-t-2 border-blue-500 p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b items-start">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Shield className="w-80 h-80" /></div>
-                <div className="flex items-center gap-4 mb-2 relative z-10 pl-2 shrink-0">
+                <div className="flex items-center gap-4 mb-2 relative z-10 pl-2 shrink-0 w-full">
                   <h2 className="text-xl md:text-2xl font-bold uppercase italic tracking-tighter text-blue-400 flex items-center gap-3">
                     {t.defenders}
                     {!config.autoTeams && <span className="text-base font-normal text-val-light opacity-80 tracking-widest">[{defenderTeamName}]</span>}
@@ -566,7 +565,7 @@ const App: React.FC = () => {
                   )}
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500/50 to-transparent"></div>
                 </div>
-                <div className="grid grid-cols-5 gap-2 relative z-10 flex-1 min-h-0">
+                <div className="grid grid-cols-5 gap-2 relative z-10 w-full">
                   {defenders.map(p => <PlayerCard key={p.id} player={p} isDefender={true} t={t} />)}
                 </div>
               </div>
@@ -575,9 +574,9 @@ const App: React.FC = () => {
                 <div className="bg-val-dark px-5 py-2 border-2 border-val-red text-val-red font-bold text-xl md:text-2xl italic shadow-2xl skew-x-[-10deg]"><div className="skew-x-[10deg]">{t.vs || 'VS'}</div></div>
               </div>
 
-              <div className="flex-1 bg-red-900/10 border-t-2 border-val-red p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b">
+              <div className="flex-1 bg-red-900/10 border-t-2 border-val-red p-2 md:p-3 relative overflow-hidden shadow-lg flex flex-col min-h-0 rounded-b items-start">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none"><Swords className="w-80 h-80" /></div>
-                <div className="flex items-center gap-4 mb-2 relative z-10 pl-2 shrink-0">
+                <div className="flex items-center gap-4 mb-2 relative z-10 pl-2 shrink-0 w-full">
                   <h2 className="text-xl md:text-2xl font-bold uppercase italic tracking-tighter text-val-red flex items-center gap-3">
                     {t.attackers}
                     {!config.autoTeams && <span className="text-base font-normal text-val-light opacity-80 tracking-widest">[{attackerTeamName}]</span>}
@@ -589,7 +588,7 @@ const App: React.FC = () => {
                   )}
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-val-red/50 to-transparent"></div>
                 </div>
-                <div className="grid grid-cols-5 gap-2 relative z-10 flex-1 min-h-0">
+                <div className="grid grid-cols-5 gap-2 relative z-10 w-full">
                   {attackers.map(p => <PlayerCard key={p.id} player={p} isDefender={false} t={t} />)}
                 </div>
               </div>
